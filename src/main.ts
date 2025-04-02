@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { useContainer } from 'class-validator';
 import { join } from 'path';
+
 import { AppModule } from './app.module';
 import { GLOBAL_PREFIX, Prefix } from './common/enums/prefix.enum';
 import { Swagger } from './common/utils/setup-swagger';

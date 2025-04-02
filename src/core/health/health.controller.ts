@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Req } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   DiskHealthIndicator,
@@ -6,9 +6,10 @@ import {
   HttpHealthIndicator,
   PrismaHealthIndicator,
 } from '@nestjs/terminus';
-import { Request } from 'express';
+
 import { GLOBAL_PREFIX, Prefix } from '../../common/enums/prefix.enum';
 import { ApiConfigService } from '../../config/api-config.service';
+import { Public } from '../../shared/decorators';
 import { DatabaseService } from '../db/database.service';
 import { HealthCheck } from './health.decorator';
 
@@ -27,14 +28,15 @@ export class HealthController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @Public()
   @ApiOperation({ summary: 'Get state of api. [open for: everyone]' })
   @HealthCheck()
-  check(@Req() req: Request) {
+  check() {
     return this.health.check([
       () =>
         this.http.pingCheck(
           'backend',
-          `${req.protocol}://${req.get('host')}/${GLOBAL_PREFIX}/${Prefix.HEALTH}/ok`,
+          `${this.cs.get('app.serverUrl')}/${GLOBAL_PREFIX}/${Prefix.HEALTH}/ok`,
         ),
       () => this.db.pingCheck('database', this.prisma),
       () =>
@@ -47,6 +49,7 @@ export class HealthController {
 
   @Get('frontend')
   @HttpCode(HttpStatus.OK)
+  @Public()
   @ApiOperation({ summary: 'Get state of frontend. [open for: everyone]' })
   @HealthCheck()
   checkFrontend() {
@@ -56,6 +59,7 @@ export class HealthController {
   }
 
   @Get('ok')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get callback from backend. [open for: everyone]' })
   ok() {

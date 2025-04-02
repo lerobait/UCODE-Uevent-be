@@ -9,4 +9,4 @@ import { DatabaseService } from './database.service';
   exports: [DatabaseService],
   providers: [DatabaseService, DbCronService],
 })
-export class DbModule {}
+export class DatabaseModule {}

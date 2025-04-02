@@ -1,6 +1,10 @@
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
 import { Env } from '../config.interface';
 import { ConfigValidator } from '../config.validator';
+
+dotenv.config();
 
 const AppSchema = z.object({
   PORT: z.coerce.number().default(3000),

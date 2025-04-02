@@ -1,3 +1,2 @@
-export * from './paginated.dto';
-export * from './pagination.service';
+export * from './paginated';
 export * from './pagination-options.dto';

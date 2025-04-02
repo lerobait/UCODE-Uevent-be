@@ -1,5 +1,9 @@
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
 import { ConfigValidator } from '../config.validator';
+
+dotenv.config();
 
 const MailSchema = z.object({
   MAIL_PORT: z.coerce.number().default(465),
@@ -8,9 +12,12 @@ const MailSchema = z.object({
   MAIL_AUTH_PASS: z.string(),
   MAIL_FROM_NAME: z.string(),
   MAIL_FROM_ADDRESS: z.string(),
+  MAIL_TOKEN_TIME: z.string().default('20m'),
+  MAIL_TOKEN_SECRET: z.string(),
 });
 
 export type IMailConfig = ReturnType<typeof getMailConfig>;
+
 const getMailConfig = () => {
   const config = ConfigValidator.validate(process.env, MailSchema);
 
@@ -25,6 +32,10 @@ const getMailConfig = () => {
       from: {
         name: config.MAIL_FROM_NAME,
         address: config.MAIL_FROM_ADDRESS,
+      },
+      token: {
+        time: config.MAIL_TOKEN_TIME,
+        secret: config.MAIL_TOKEN_SECRET,
       },
       secure: config.MAIL_PORT === 465,
     },

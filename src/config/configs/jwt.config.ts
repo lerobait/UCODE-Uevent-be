@@ -1,5 +1,9 @@
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
 import { ConfigValidator } from '../config.validator';
+
+dotenv.config();
 
 const JwtConfigSchema = z.object({
   JWT_ACCESS_TOKEN_SECRET: z.string(),

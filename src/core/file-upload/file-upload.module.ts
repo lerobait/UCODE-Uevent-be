@@ -1,5 +1,6 @@
 import { S3Client } from '@aws-sdk/client-s3';
 import { Module } from '@nestjs/common';
+
 import { ApiConfigModule } from '../../config/api-config.module';
 import { ApiConfigService } from '../../config/api-config.service';
 import { FileUploadService } from './file-upload.service';

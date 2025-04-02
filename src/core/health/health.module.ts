@@ -1,8 +1,9 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
+
 import { ApiConfigModule } from '../../config/api-config.module';
-import { DbModule } from '../db/db.module';
+import { DatabaseModule } from '../db/db.module';
 import { GlobalLogger } from '../global/global.logger';
 import { HealthController } from './health.controller';
 
@@ -13,7 +14,7 @@ import { HealthController } from './health.controller';
       errorLogStyle: 'pretty',
     }),
     HttpModule,
-    DbModule,
+    DatabaseModule,
     ApiConfigModule,
   ],
   controllers: [HealthController],

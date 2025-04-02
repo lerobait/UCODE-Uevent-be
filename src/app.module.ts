@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+
 import { AppController } from './app.controller';
 import { ApiConfigModule } from './config/api-config.module';
 import { ApiConfigService } from './config/api-config.service';
@@ -17,7 +18,7 @@ export class AppModule implements NestModule {
   requestLogger: GlobalLogger;
 
   constructor(private readonly acs: ApiConfigService) {
-    this.requestLogger = new GlobalLogger(acs, 'Request');
+    this.requestLogger = new GlobalLogger('Request');
   }
 
   configure(consumer: MiddlewareConsumer) {

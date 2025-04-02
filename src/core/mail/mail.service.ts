@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { render } from '@react-email/render';
 import * as nodemailer from 'nodemailer';
 import { createTransport, SendMailOptions } from 'nodemailer';
-import { ReactElement } from 'react';
+import { ReactElement, ReactNode } from 'react';
 
 import { ApiConfigService } from '../../config/api-config.service';
 
 interface MailOptions extends SendMailOptions {
   to: string;
   subject: string;
-  template: ReactElement;
+  template: ReactElement | ReactNode;
 }
 
 @Injectable()
@@ -41,7 +41,7 @@ export class MailService {
   }
 
   async sendMail({ template, ...rest }: MailOptions) {
-    const html = await render(template);
+    const html = await render(template as ReactElement);
 
     await this.transporter.sendMail({
       ...rest,

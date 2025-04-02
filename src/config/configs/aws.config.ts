@@ -1,5 +1,9 @@
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
 import { ConfigValidator } from '../config.validator';
+
+dotenv.config();
 
 const AwsSchema = z.object({
   AWS_S3_REGION: z.string(),

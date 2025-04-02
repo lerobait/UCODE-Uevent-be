@@ -1,7 +1,8 @@
-import { HttpStatus, applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import { HealthIndicatorResult } from '@nestjs/terminus';
+
 import { ApiExceptionResponse } from '../../shared/docs';
 
 enum HealthCheckStatus {

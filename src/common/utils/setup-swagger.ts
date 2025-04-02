@@ -1,6 +1,8 @@
-import { IDDto } from '@/shared/dto';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+import { IDDto } from '@/shared/dto';
+
 import { GLOBAL_PREFIX } from '../enums/prefix.enum';
 
 export class Swagger {

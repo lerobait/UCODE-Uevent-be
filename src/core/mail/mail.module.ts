@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { ApiConfigModule } from '../../config/api-config.module';
 import { MailService } from './mail.service';
 
