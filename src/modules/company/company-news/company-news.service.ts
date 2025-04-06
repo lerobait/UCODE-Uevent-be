@@ -11,8 +11,8 @@ import { UpdateCompanyNewsDto } from './dto/update-company-news.dto';
 export class CompanyNewsService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  create(userId: string, dto: CreateCompanyNewsDto) {
-    const company = this.databaseService.company.findUnique({
+  async create(userId: string, dto: CreateCompanyNewsDto) {
+    const company = await this.databaseService.company.findUnique({
       where: {
         id: dto.companyId,
         ownerId: userId,
@@ -25,11 +25,14 @@ export class CompanyNewsService {
 
     return this.databaseService.companyNews.create({
       data: dto,
+      include: {
+        company: true,
+      },
     });
   }
 
-  update(id: string, dto: UpdateCompanyNewsDto, userId: string) {
-    const company = this.databaseService.company.findUnique({
+  async update(id: string, dto: UpdateCompanyNewsDto, userId: string) {
+    const company = await this.databaseService.company.findUnique({
       where: {
         id,
         ownerId: userId,
@@ -58,16 +61,22 @@ export class CompanyNewsService {
       },
       skip: (dto.page - 1) * dto.limit,
       take: dto.limit,
+      include: {
+        company: true,
+      },
     });
     const count = await this.databaseService.companyNews.count();
 
-    return PaginatedCompanyNewsEntity.paginate(data, count, dto);
+    return new PaginatedCompanyNewsEntity(data, count, dto);
   }
 
   async findById(id: string) {
     const data = await this.databaseService.companyNews.findUnique({
       where: {
         id,
+      },
+      include: {
+        company: true,
       },
     });
 
@@ -78,11 +87,14 @@ export class CompanyNewsService {
     return data;
   }
 
-  delete(id: string) {
+  async delete(userId: string, id: string) {
     return this.databaseService.companyNews
       .delete({
         where: {
           id,
+          company: {
+            ownerId: userId,
+          },
         },
       })
       .catch(() => {

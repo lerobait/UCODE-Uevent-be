@@ -1,18 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { OmitType, PartialType } from '@nestjs/swagger';
 
-export class UpdateCompanyNewsDto {
-  @ApiProperty({ required: true, example: 'This is a news title' })
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  title: string;
+import { CreateCompanyNewsDto } from './create-company-news.dto';
 
-  @ApiProperty({ required: true, example: 'This is a news content' })
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(1000)
-  content: string;
-}
+export class UpdateCompanyNewsDto extends PartialType(
+  OmitType(CreateCompanyNewsDto, ['companyId']),
+) {}

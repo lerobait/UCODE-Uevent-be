@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import { CompanyNews } from '@prisma/client';
 import {
   ClassTransformOptions,
@@ -9,6 +9,8 @@ import {
 
 import { BaseEntity } from '@/common/base/base.entity';
 import { Paginated } from '@/shared/pagination';
+
+import { CompanyEntity } from '../company.entity';
 
 class CompanyNewsDescription implements CompanyNews {
   @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
@@ -23,11 +25,18 @@ class CompanyNewsDescription implements CompanyNews {
   createdAt: Date;
   @Exclude()
   updatedAt: Date;
+  @Exclude()
   companyId: string;
 }
 
+class CompanyNewsRelations {
+  @Type(() => CompanyEntity)
+  @ApiProperty({ type: CompanyEntity })
+  company: CompanyEntity;
+}
+
 export class CompanyNewsEntity
-  extends CompanyNewsDescription
+  extends IntersectionType(CompanyNewsDescription, CompanyNewsRelations)
   implements BaseEntity
 {
   constructor(data: CompanyNews, options?: ClassTransformOptions) {
@@ -36,8 +45,8 @@ export class CompanyNewsEntity
   }
 }
 
-export class PaginatedCompanyNewsEntity extends Paginated<CompanyNewsEntity> {
+export class PaginatedCompanyNewsEntity extends Paginated<CompanyNews> {
   @Type(() => CompanyNewsEntity)
   @ApiProperty({ type: CompanyNewsEntity, isArray: true })
-  declare items: CompanyNewsEntity[];
+  declare items: CompanyNews[];
 }

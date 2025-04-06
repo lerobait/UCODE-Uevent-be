@@ -2,14 +2,14 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateCompanyDto {
-  @ApiProperty({ required: false, example: 'Acme Corporation' })
+  @ApiProperty({ required: true, example: 'Acme Corporation' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
   name: string;
 
   @ApiProperty({
-    required: false,
+    required: true,
     example: 'Leading provider of event solutions',
   })
   @IsString()
@@ -17,19 +17,19 @@ export class CreateCompanyDto {
   @MaxLength(1000)
   description: string;
 
-  @ApiProperty({ required: false, example: 'info@acme.com' })
+  @ApiProperty({ required: true, example: 'info@acme.com' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
   email: string;
 
-  @ApiProperty({ required: false, example: 'https://acme.com' })
+  @ApiProperty({ required: true, example: 'https://acme.com' })
   @IsString()
   @IsUrl()
   @IsNotEmpty()
   website: string;
 
-  @ApiProperty({ required: false, example: 'New York, USA' })
+  @ApiProperty({ required: true, example: 'New York, USA' })
   @IsString()
   @IsNotEmpty()
   location: string;

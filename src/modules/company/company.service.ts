@@ -21,6 +21,17 @@ export class CompanyService {
   }
 
   async update(id: string, dto: UpdateCompanyDto, userId: string) {
+    const company = await this.databaseService.company.findUnique({
+      where: {
+        id,
+        ownerId: userId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
     return this.databaseService.company.update({
       where: {
         id,
@@ -32,7 +43,20 @@ export class CompanyService {
     });
   }
 
-  async findAll(userId: string, dto: GetCompanyDto): Promise<PaginatedCompany> {
+  async findAll(dto: GetCompanyDto) {
+    const data = await this.databaseService.company.findMany({
+      skip: (dto.page - 1) * dto.limit,
+      take: dto.limit,
+    });
+    const count = await this.databaseService.company.count();
+
+    return new PaginatedCompany(data, count, dto);
+  }
+
+  async findAllByUserId(
+    userId: string,
+    dto: GetCompanyDto,
+  ): Promise<PaginatedCompany> {
     const data = await this.databaseService.company.findMany({
       where: {
         ownerId: userId,
@@ -47,7 +71,7 @@ export class CompanyService {
       },
     });
 
-    return PaginatedCompany.paginate(data, count, dto);
+    return new PaginatedCompany(data, count, dto);
   }
 
   async findById(id: string) {

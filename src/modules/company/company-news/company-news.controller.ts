@@ -8,14 +8,18 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 
 import { Prefix } from '@/common/enums/prefix.enum';
 import { JwtPayload } from '@/core/auth/interface/jwt.interface';
-import { GetCurrentUser } from '@/shared/decorators';
+import { GetCurrentUser, Public } from '@/shared/decorators';
+import { IDDto } from '@/shared/dto';
 import { PaginationOptionsDto } from '@/shared/pagination';
 
-import { CompanyNewsEntity } from './company-news.entity';
+import {
+  CompanyNewsEntity,
+  PaginatedCompanyNewsEntity,
+} from './company-news.entity';
 import { CompanyNewsService } from './company-news.service';
 import { CreateCompanyNewsDto } from './dto/create-company-news.dto';
 import { UpdateCompanyNewsDto } from './dto/update-company-news.dto';
@@ -25,6 +29,7 @@ export class CompanyNewsController {
   constructor(private readonly companyNewsService: CompanyNewsService) {}
 
   @ApiBearerAuth()
+  @ApiOkResponse({ type: CompanyNewsEntity })
   @Post()
   async create(
     @Body() dto: CreateCompanyNewsDto,
@@ -36,10 +41,11 @@ export class CompanyNewsController {
   }
 
   @ApiBearerAuth()
+  @ApiOkResponse({ type: CompanyNewsEntity })
   @Patch(':id')
   async update(
     @Body() dto: UpdateCompanyNewsDto,
-    @Param('id') id: string,
+    @Param() { id }: IDDto,
     @GetCurrentUser() { sub }: JwtPayload,
   ) {
     return new CompanyNewsEntity(
@@ -47,21 +53,24 @@ export class CompanyNewsController {
     );
   }
 
-  @ApiBearerAuth()
+  @ApiOkResponse({ type: PaginatedCompanyNewsEntity, isArray: true })
+  @Public()
   @Get('/company/:id')
-  getCompanyNews(@Query() dto: PaginationOptionsDto, @Param('id') id: string) {
+  getCompanyNews(@Query() dto: PaginationOptionsDto, @Param() { id }: IDDto) {
     return this.companyNewsService.findAllByCompany(id, dto);
   }
 
-  @ApiBearerAuth()
+  @Public()
+  @ApiOkResponse({ type: CompanyNewsEntity })
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() { id }: IDDto) {
     return new CompanyNewsEntity(await this.companyNewsService.findById(id));
   }
 
   @ApiBearerAuth()
+  @ApiOkResponse({ type: CompanyNewsEntity })
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return new CompanyNewsEntity(await this.companyNewsService.delete(id));
+  async delete(@Param() { id }: IDDto, @GetCurrentUser() { sub }: JwtPayload) {
+    return new CompanyNewsEntity(await this.companyNewsService.delete(sub, id));
   }
 }

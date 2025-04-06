@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 
-import { DatabaseService } from '@/core/db/database.service';
+import { DatabaseModule } from '@/core/db/db.module';
 
 import { CompanyNewsController } from './company-news.controller';
 import { CompanyNewsService } from './company-news.service';
 
 @Module({
   controllers: [CompanyNewsController],
-  providers: [CompanyNewsService, DatabaseService],
+  providers: [CompanyNewsService],
+  imports: [DatabaseModule],
 })
 export class CompanyNewsModule {}
