@@ -37,7 +37,7 @@ export class CompanyController {
 
   @ApiBearerAuth()
   @ApiOkResponse({ type: CompanyEntity })
-  @Patch('update/:id')
+  @Patch(':id')
   async update(
     @Body() dto: UpdateCompanyDto,
     @GetCurrentUser() { sub }: JwtPayload,
@@ -75,5 +75,23 @@ export class CompanyController {
   @Delete(':id')
   async delete(@GetCurrentUser() { sub }: JwtPayload, @Param() { id }: IDDto) {
     return new CompanyEntity(await this.companyService.delete(id, sub));
+  }
+
+  @ApiBearerAuth()
+  @Post(':id/subscribe')
+  async subscribe(
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Param() { id }: IDDto,
+  ) {
+    return await this.companyService.subscribe(id, sub);
+  }
+
+  @ApiBearerAuth()
+  @Delete(':id/unsubscribe')
+  async unsubscribe(
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Param() { id }: IDDto,
+  ) {
+    return this.companyService.unsubscribe(id, sub);
   }
 }
