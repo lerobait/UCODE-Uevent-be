@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
+import { Success } from '@/core/auth/dto/success.dto';
 import { DatabaseService } from '@/core/db/database.service';
 
 import { PaginatedCompany } from './company.entity';
@@ -131,9 +132,7 @@ export class CompanyService {
       throw error;
     }
 
-    return {
-      success: true,
-    };
+    return new Success();
   }
 
   async unsubscribe(companyId: string, userId: string) {
@@ -166,8 +165,6 @@ export class CompanyService {
       throw error;
     }
 
-    return {
-      success: true,
-    };
+    return new Success();
   }
 }
