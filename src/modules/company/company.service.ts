@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
+import { Success } from '@/core/auth/dto/success.dto';
 import { DatabaseService } from '@/core/db/database.service';
 
 import { PaginatedCompany } from './company.entity';
@@ -99,5 +105,66 @@ export class CompanyService {
       .catch(() => {
         throw new NotFoundException('Company not found');
       });
+  }
+
+  async subscribe(companyId: string, userId: string) {
+    const company = await this.databaseService.company.findUnique({
+      where: {
+        id: companyId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    try {
+      await this.databaseService.companySubscription.create({
+        data: { userId, companyId },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException('Already subscribed');
+        }
+      }
+
+      throw error;
+    }
+
+    return new Success();
+  }
+
+  async unsubscribe(companyId: string, userId: string) {
+    const company = await this.databaseService.company.findUnique({
+      where: {
+        id: companyId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    try {
+      await this.databaseService.companySubscription.delete({
+        where: {
+          userId_companyId: {
+            userId,
+            companyId,
+          },
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new BadRequestException('Not subscribed');
+        }
+      }
+
+      throw error;
+    }
+
+    return new Success();
   }
 }

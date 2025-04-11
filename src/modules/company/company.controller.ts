@@ -11,6 +11,7 @@ import {
 import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 
 import { Prefix } from '@/common/enums/prefix.enum';
+import { Success } from '@/core/auth/dto/success.dto';
 import { JwtPayload } from '@/core/auth/interface/jwt.interface';
 import { GetCurrentUser, Public } from '@/shared/decorators';
 import { IDDto } from '@/shared/dto';
@@ -37,7 +38,7 @@ export class CompanyController {
 
   @ApiBearerAuth()
   @ApiOkResponse({ type: CompanyEntity })
-  @Patch('update/:id')
+  @Patch(':id')
   async update(
     @Body() dto: UpdateCompanyDto,
     @GetCurrentUser() { sub }: JwtPayload,
@@ -75,5 +76,25 @@ export class CompanyController {
   @Delete(':id')
   async delete(@GetCurrentUser() { sub }: JwtPayload, @Param() { id }: IDDto) {
     return new CompanyEntity(await this.companyService.delete(id, sub));
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: Success })
+  @Post(':id/subscribe')
+  async subscribe(
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Param() { id }: IDDto,
+  ) {
+    return await this.companyService.subscribe(id, sub);
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: Success })
+  @Delete(':id/unsubscribe')
+  async unsubscribe(
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Param() { id }: IDDto,
+  ) {
+    return this.companyService.unsubscribe(id, sub);
   }
 }

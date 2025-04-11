@@ -1,7 +1,7 @@
 import { createKeyv, Keyv } from '@keyv/redis';
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Global, Module, ValidationPipe } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { CacheableMemory } from 'cacheable';
 
@@ -41,10 +41,10 @@ import { GlobalLogger } from './global.logger';
   ],
   exports: [GlobalLogger],
   providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor,
-    },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: CacheInterceptor,
+    // },
     {
       provide: GlobalLogger,
       useValue: new GlobalLogger('Global'),
