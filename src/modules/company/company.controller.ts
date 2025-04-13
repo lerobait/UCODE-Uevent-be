@@ -16,6 +16,7 @@ import {
 
 import { Prefix } from '@/common/enums/prefix.enum';
 import { Success } from '@/core/auth/dto/success.dto';
+import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { JwtPayload } from '@/core/auth/interface/jwt.interface';
 import { GetCurrentUser, Public } from '@/shared/decorators';
 import { IDDto } from '@/shared/dto';
@@ -69,10 +70,11 @@ export class CompanyController {
   }
 
   @Public()
+  @ApiBearerAuth()
   @ApiOkResponse({ type: CompanyEntity })
   @Get(':id')
-  async findOne(@Param() { id }: IDDto) {
-    return new CompanyEntity(await this.companyService.findById(id));
+  async findOne(@Param() { id }: IDDto, @GetCurrentUser() { sub }: JwtPayload) {
+    return await this.companyService.findById(id, sub);
   }
 
   @ApiBearerAuth()
@@ -100,5 +102,25 @@ export class CompanyController {
     @Param() { id }: IDDto,
   ) {
     return this.companyService.unsubscribe(id, sub);
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: UrlResponse })
+  @Post(':id/onboarding-link')
+  async createOnboardingLink(
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Param() { id }: IDDto,
+  ) {
+    return this.companyService.createOnboardingLink(id, sub);
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: UrlResponse })
+  @Post(':id/dashboard-link')
+  async createDashboardLink(
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Param() { id }: IDDto,
+  ) {
+    return this.companyService.createDashboardLink(id, sub);
   }
 }

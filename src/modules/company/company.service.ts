@@ -6,23 +6,52 @@ import {
 import { Prisma } from '@prisma/client';
 
 import { Success } from '@/core/auth/dto/success.dto';
+import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { DatabaseService } from '@/core/db/database.service';
 
-import { PaginatedCompany } from './company.entity';
+import { StripeService } from '../stripe/stripe.service';
+import { CompanyEntity, PaginatedCompany } from './company.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { GetCompanyDto } from './dto/get-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
 @Injectable()
 export class CompanyService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly stripeService: StripeService,
+  ) {}
 
   async create(userId: string, dto: CreateCompanyDto) {
-    return this.databaseService.company.create({
-      data: {
-        ...dto,
-        ownerId: userId,
-      },
+    return await this.databaseService.$transaction(async (prisma) => {
+      const company = await prisma.company.create({
+        data: {
+          ...dto,
+          ownerId: userId,
+        },
+      });
+      const account = await this.stripeService.createConnectAccount({
+        business_profile: {
+          name: dto.name,
+          support_email: dto.email,
+          product_description: dto.description,
+        },
+        metadata: {
+          ownerId: userId,
+          company: company.id,
+        },
+      });
+
+      const updatedCompany = await prisma.company.update({
+        where: {
+          id: company.id,
+        },
+        data: {
+          stripeAccountId: account.id,
+        },
+      });
+
+      return updatedCompany;
     });
   }
 
@@ -80,7 +109,7 @@ export class CompanyService {
     return new PaginatedCompany(data, count, dto);
   }
 
-  async findById(id: string) {
+  async findById(id: string, userId?: string) {
     const data = await this.databaseService.company.findUnique({
       where: {
         id,
@@ -91,7 +120,11 @@ export class CompanyService {
       throw new NotFoundException('Company not found');
     }
 
-    return data;
+    const isOwner = userId && userId === data.ownerId;
+
+    return new CompanyEntity(data, {
+      excludePrefixes: isOwner ? [] : ['stripe'],
+    });
   }
 
   async delete(id: string, userId: string) {
@@ -105,6 +138,44 @@ export class CompanyService {
       .catch(() => {
         throw new NotFoundException('Company not found');
       });
+  }
+
+  async createOnboardingLink(id: string, userId: string) {
+    const company = await this.databaseService.company.findUnique({
+      where: {
+        id,
+        ownerId: userId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const data = await this.stripeService.createOnboardingLink(
+      company.stripeAccountId,
+    );
+
+    return new UrlResponse(data.url);
+  }
+
+  async createDashboardLink(id: string, userId: string) {
+    const company = await this.databaseService.company.findUnique({
+      where: {
+        id,
+        ownerId: userId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const data = await this.stripeService.createDashboardLink(
+      company.stripeAccountId,
+    );
+
+    return new UrlResponse(data.url);
   }
 
   async subscribe(companyId: string, userId: string) {
