@@ -62,12 +62,20 @@ export class StripeService {
 
   // PRODUCTS
 
-  async createProduct(data: Stripe.ProductCreateParams) {
-    return await this.stripe.products.create(data);
+  async createProduct(data: Stripe.ProductCreateParams, stripeAccount: string) {
+    return await this.stripe.products.create(data, {
+      stripeAccount,
+    });
   }
 
-  async updateProduct(id: string, data: Stripe.ProductUpdateParams) {
-    return await this.stripe.products.update(id, data);
+  async updateProduct(
+    id: string,
+    data: Stripe.ProductUpdateParams,
+    stripeAccount: string,
+  ) {
+    return await this.stripe.products.update(id, data, {
+      stripeAccount,
+    });
   }
 
   async removeProduct(id: string) {
@@ -75,4 +83,37 @@ export class StripeService {
   }
 
   // PRODUCTS END
+
+  // PRICES
+
+  async createPrice(data: Stripe.PriceCreateParams, stripeAccount: string) {
+    return await this.stripe.prices.create(data, {
+      stripeAccount,
+    });
+  }
+
+  async updatePrice(
+    id: string,
+    data: Stripe.PriceUpdateParams,
+    stripeAccount: string,
+  ) {
+    return await this.stripe.prices.update(id, data, {
+      stripeAccount,
+    });
+  }
+
+  // PRICES END
+
+  // PAYMENTS
+
+  async createPaymentLink(
+    data: Stripe.PaymentLinkCreateParams,
+    stripeAccount: string,
+  ) {
+    return await this.stripe.paymentLinks.create(data, {
+      stripeAccount,
+    });
+  }
+
+  // PAYMENTS END
 }

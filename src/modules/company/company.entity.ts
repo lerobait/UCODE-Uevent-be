@@ -32,7 +32,7 @@ export class CompanyDescription implements Company {
   @ApiProperty({ example: '123 Main St, City, Country' })
   location: string;
 
-  @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
+  @Exclude()
   stripeAccountId: string;
 
   @ApiProperty()

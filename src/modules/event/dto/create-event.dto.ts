@@ -68,11 +68,6 @@ export class CreateEventDto {
   @Type(() => CreateEventLocationDto)
   eventLocation?: CreateEventLocationDto;
 
-  @ApiProperty({ required: false, example: 'UDS', default: 'USD' })
-  @IsOptional()
-  @IsString()
-  currency?: string;
-
   @ApiProperty({ required: false, example: 20.0, default: 0 })
   @IsOptional()
   @IsNumber()

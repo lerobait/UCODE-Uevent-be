@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UrlResponse {
-  @ApiProperty({ example: true })
+  @ApiProperty({ example: 'https://example.com' })
   url: string;
 
   constructor(url: string) {

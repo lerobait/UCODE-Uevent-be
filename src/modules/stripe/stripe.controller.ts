@@ -6,6 +6,7 @@ import {
   RawBodyRequest,
   Req,
 } from '@nestjs/common';
+import { PaymentStatusType } from '@prisma/client';
 import Stripe from 'stripe';
 
 import { DatabaseService } from '@/core/db/database.service';
@@ -64,6 +65,54 @@ export class StripeController {
         });
 
         break;
+      }
+      case 'checkout.session.completed': {
+        const isPaid = event.data.object.payment_status === 'paid';
+        const metadata = event.data.object.metadata;
+
+        if (!metadata.eventId || !metadata.userId) {
+          throw new BadRequestException('Missing metadata properties');
+        }
+
+        if (!isPaid) {
+          return;
+        }
+
+        const eventData = await this.databaseService.event.findUnique({
+          where: {
+            id: metadata.eventId,
+          },
+        });
+
+        if (!eventData) {
+          throw new BadRequestException('eventData not found');
+        }
+
+        await this.databaseService.$transaction(async (prisma) => {
+          const attendee = await prisma.eventAttendee.create({
+            data: {
+              userId: metadata.userId,
+              eventId: metadata.eventId,
+            },
+          });
+
+          const ticket = await prisma.ticket.create({
+            data: {
+              attendeeId: attendee.id,
+              userId: metadata.userId,
+              eventId: metadata.eventId,
+            },
+          });
+
+          await prisma.payment.create({
+            data: {
+              amount: eventData.price,
+              userId: metadata.userId,
+              ticketId: ticket.id,
+              status: PaymentStatusType.COMPLETED,
+            },
+          });
+        });
       }
 
       default:

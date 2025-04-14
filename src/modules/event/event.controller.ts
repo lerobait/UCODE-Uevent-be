@@ -23,6 +23,7 @@ import {
 
 import { Prefix } from '@/common/enums/prefix.enum';
 import { Success } from '@/core/auth/dto/success.dto';
+import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { JwtPayload } from '@/core/auth/interface/jwt.interface';
 import {
   UploadFileSizeValidator,
@@ -137,7 +138,7 @@ export class EventController {
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: Success })
   @Post(':id/subscribe')
-  async subnscribe(
+  async subscribe(
     @GetCurrentUser() { sub }: JwtPayload,
     @Param() { id }: IDDto,
   ) {
@@ -152,5 +153,15 @@ export class EventController {
     @Param() { id }: IDDto,
   ) {
     return this.eventService.unsubscribe(id, sub);
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: UrlResponse })
+  @Post(':id/purchase')
+  async purchase(
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Param() { id }: IDDto,
+  ) {
+    return this.eventService.purchase(id, sub);
   }
 }
