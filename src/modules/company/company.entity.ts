@@ -51,10 +51,7 @@ export class CompanyDescription implements Company {
 export class CompanyEntity extends CompanyDescription implements BaseEntity {
   constructor(data: Company, options?: ClassTransformOptions) {
     super();
-    plainToClassFromExist(this, data, {
-      excludePrefixes: ['stripe'],
-      ...options,
-    });
+    plainToClassFromExist(this, data, options);
   }
 }
 

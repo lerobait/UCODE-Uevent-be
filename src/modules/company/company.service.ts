@@ -10,7 +10,7 @@ import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { DatabaseService } from '@/core/db/database.service';
 
 import { StripeService } from '../stripe/stripe.service';
-import { CompanyEntity, PaginatedCompany } from './company.entity';
+import { PaginatedCompany } from './company.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { GetCompanyDto } from './dto/get-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -109,7 +109,7 @@ export class CompanyService {
     return new PaginatedCompany(data, count, dto);
   }
 
-  async findById(id: string, userId?: string) {
+  async findById(id: string) {
     const data = await this.databaseService.company.findUnique({
       where: {
         id,
@@ -120,11 +120,7 @@ export class CompanyService {
       throw new NotFoundException('Company not found');
     }
 
-    const isOwner = userId && userId === data.ownerId;
-
-    return new CompanyEntity(data, {
-      excludePrefixes: isOwner ? [] : ['stripe'],
-    });
+    return data;
   }
 
   async delete(id: string, userId: string) {

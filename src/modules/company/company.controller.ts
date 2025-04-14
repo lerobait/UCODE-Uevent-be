@@ -73,8 +73,8 @@ export class CompanyController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: CompanyEntity })
   @Get(':id')
-  async findOne(@Param() { id }: IDDto, @GetCurrentUser() { sub }: JwtPayload) {
-    return await this.companyService.findById(id, sub);
+  async findOne(@Param() { id }: IDDto) {
+    return new CompanyEntity(await this.companyService.findById(id));
   }
 
   @ApiBearerAuth()
