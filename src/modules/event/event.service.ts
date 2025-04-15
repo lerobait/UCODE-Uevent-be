@@ -5,11 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import dayjs from 'dayjs';
 
 import { Success } from '@/core/auth/dto/success.dto';
+import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { DatabaseService } from '@/core/db/database.service';
 
 import { FileUploadService } from '../../core/file-upload/file-upload.service';
+import { StripeService } from '../stripe/stripe.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { GetEventDto } from './dto/get-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -20,9 +23,10 @@ export class EventService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly fileUploadService: FileUploadService,
+    private readonly stripeService: StripeService,
   ) {}
 
-  static include: Prisma.EventInclude = {
+  private readonly include: Prisma.EventInclude = {
     eventLocation: true,
     company: true,
   };
@@ -30,7 +34,7 @@ export class EventService {
   async create(userId: string, dto: CreateEventDto) {
     const company = await this.databaseService.company.findUnique({
       where: { id: dto.companyId },
-      select: { ownerId: true },
+      select: { ownerId: true, stripeAccountId: true, isVerified: true },
     });
 
     if (!company) {
@@ -43,23 +47,74 @@ export class EventService {
       );
     }
 
-    return this.databaseService.event.create({
-      data: {
-        ...dto,
-        creatorId: userId,
-        companyId: dto.companyId,
-        eventLocation: {
-          create: dto.eventLocation,
+    if (!company.isVerified) {
+      throw new ForbiddenException('Company is not verified');
+    }
+
+    if (!company.stripeAccountId) {
+      throw new ForbiddenException('Company is not connected to Stripe');
+    }
+
+    return await this.databaseService.$transaction(async (prisma) => {
+      const data = await prisma.event.create({
+        data: {
+          ...dto,
+          creatorId: userId,
+          companyId: dto.companyId,
+          eventLocation: {
+            create: dto.eventLocation,
+          },
         },
-      },
-      include: EventService.include,
+        include: this.include,
+      });
+
+      const { id: stripeProductId } = await this.stripeService.createProduct(
+        {
+          name: dto.title,
+          description: dto.description,
+          shippable: false,
+          metadata: {
+            ownerId: userId,
+            companyId: dto.companyId,
+            eventId: data.id,
+          },
+        },
+        company.stripeAccountId,
+      );
+
+      const { id: stripePriceId } = await this.stripeService.createPrice(
+        {
+          product: stripeProductId,
+          unit_amount: dto.price * 100,
+          currency: 'usd',
+          metadata: {
+            ownerId: userId,
+            companyId: dto.companyId,
+            eventId: data.id,
+            stripeProductId,
+          },
+        },
+        company.stripeAccountId,
+      );
+
+      await prisma.event.update({
+        where: {
+          id: data.id,
+        },
+        data: {
+          stripeProductId,
+          stripePriceId,
+        },
+      });
+
+      return data;
     });
   }
 
   async update(id: string, dto: UpdateEventDto, userId: string) {
     const event = await this.databaseService.event.findUnique({
       where: { id },
-      include: { creator: true, eventLocation: true },
+      include: { creator: true, eventLocation: true, company: true },
     });
 
     if (!event) {
@@ -90,6 +145,18 @@ export class EventService {
             },
           }
         : undefined;
+
+    if (event.stripeProductId && event.company.stripeAccountId) {
+      await this.stripeService.updateProduct(
+        event.stripeProductId,
+        {
+          name: dto.title,
+          description: dto.description,
+          shippable: false,
+        },
+        event.company.stripeAccountId,
+      );
+    }
 
     return this.databaseService.event.update({
       where: {
@@ -133,7 +200,7 @@ export class EventService {
       data: {
         posterUrl,
       },
-      include: EventService.include,
+      include: this.include,
     });
   }
 
@@ -146,7 +213,7 @@ export class EventService {
           lte: now,
         },
       },
-      include: EventService.include,
+      include: this.include,
       skip: (dto.page - 1) * dto.limit,
       take: dto.limit,
     });
@@ -170,7 +237,7 @@ export class EventService {
       where: {
         creatorId: userId,
       },
-      include: EventService.include,
+      include: this.include,
       skip: (dto.page - 1) * dto.limit,
       take: dto.limit,
     });
@@ -189,7 +256,7 @@ export class EventService {
       where: {
         id,
       },
-      include: EventService.include,
+      include: this.include,
     });
 
     if (!data) {
@@ -221,7 +288,7 @@ export class EventService {
           id,
           creatorId: userId,
         },
-        include: EventService.include,
+        include: this.include,
       })
       .catch(() => {
         throw new NotFoundException('Event not found');
@@ -287,5 +354,48 @@ export class EventService {
     }
 
     return new Success();
+  }
+
+  async purchase(id: string, userId: string) {
+    const event = await this.databaseService.event.findUnique({
+      where: { id },
+      include: { company: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    if (
+      !event.stripePriceId ||
+      !event.company.stripeAccountId ||
+      !event.company.isVerified
+    ) {
+      throw new BadRequestException('Event is not available for purchase');
+    }
+
+    const isBeforeEvent = dayjs(event.publishDate).isBefore(dayjs());
+
+    if (!isBeforeEvent) {
+      throw new BadRequestException('Event is not available for purchase');
+    }
+
+    const { url } = await this.stripeService.createPaymentLink(
+      {
+        line_items: [
+          {
+            price: event.stripePriceId,
+            quantity: 1,
+          },
+        ],
+        metadata: {
+          userId,
+          eventId: id,
+        },
+      },
+      event.company.stripeAccountId,
+    );
+
+    return new UrlResponse(url);
   }
 }

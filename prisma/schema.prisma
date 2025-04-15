@@ -96,15 +96,17 @@ model User {
 }
 
 model Company {
-    id          String   @id @default(cuid()) @map("id")
-    name        String   @map("name")
-    email       String   @map("email")
-    description String?  @map("description")
-    logo        String?  @map("logo")
-    website     String?  @map("website")
-    location    String   @map("location")
-    createdAt   DateTime @default(now()) @map("created_at")
-    updatedAt   DateTime @updatedAt @map("updated_at")
+    id              String   @id @default(cuid()) @map("id")
+    name            String   @map("name")
+    email           String   @map("email")
+    description     String?  @map("description")
+    logo            String?  @map("logo")
+    website         String?  @map("website")
+    location        String   @map("location")
+    stripeAccountId String?  @map("stripe_account_id")
+    isVerified      Boolean  @default(false) @map("is_verified")
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @updatedAt @map("updated_at")
 
     // Relations
     owner       User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -157,13 +159,14 @@ model Event {
     startDate           DateTime        @map("start_date")
     endDate             DateTime        @map("end_date")
     price               Float           @default(0) @map("price")
-    currency            String          @default("USD") @map("currency")
     maxAttendees        Int?            @map("max_attendees") // Null means unlimited
     publishDate         DateTime        @default(now()) @map("publish_date")
     showAttendeeList    Boolean         @default(true) @map("show_attendee_list")
     notifyOnNewAttendee Boolean         @default(false) @map("notify_on_new_attendee")
     redirectUrl         String?         @map("redirect_url") // URL to redirect after ticket purchase
     format              EventFormatType @default(OTHER) @map("format")
+    stripeProductId     String?         @map("stripe_product_id")
+    stripePriceId       String?         @map("stripe_price_id")
     createdAt           DateTime        @default(now()) @map("created_at")
     updatedAt           DateTime        @updatedAt @map("updated_at")
 
@@ -261,7 +264,6 @@ model EventSubscription {
 
 model Ticket {
     id           String           @id @default(cuid()) @map("id")
-    ticketNumber String           @unique @map("ticket_number")
     purchaseDate DateTime         @default(now()) @map("purchase_date")
     status       TicketStatusType @default(VALID) @map("status")
 
@@ -278,7 +280,6 @@ model Ticket {
 
     @@index([eventId])
     @@index([userId])
-    @@index([ticketNumber])
     @@index([purchaseDate])
     @@map("tickets")
 }
@@ -323,9 +324,7 @@ model Comment {
 model Payment {
     id            String            @id @default(cuid()) @map("id")
     amount        Float             @map("amount")
-    currency      String            @default("USD") @map("currency")
     status        PaymentStatusType @default(PENDING) @map("status")
-    paymentMethod String            @default("CARD") @map("payment_method")
     paymentIntent String?           @map("payment_intent") // Stripe payment intent ID
     createdAt     DateTime          @default(now()) @map("created_at")
     updatedAt     DateTime          @updatedAt @map("updated_at")

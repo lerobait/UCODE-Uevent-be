@@ -41,8 +41,6 @@ class EventDescription implements Event {
   startDate: Date;
   @ApiProperty({ example: '2025-05-10T18:00:00Z' })
   endDate: Date;
-  @ApiProperty({ example: 'UDS' })
-  currency: string;
   @ApiProperty({ example: 20.0 })
   price: number;
   @ApiProperty({ example: 100 })
@@ -61,6 +59,10 @@ class EventDescription implements Event {
   creatorId: string;
   @ApiProperty({ example: 'cl8d2k3f7000012xj5wl8a2hj' })
   companyId: string;
+  @Exclude()
+  stripeProductId: string;
+  @Exclude()
+  stripePriceId: string;
   @Exclude()
   createdAt: Date;
   @Exclude()
