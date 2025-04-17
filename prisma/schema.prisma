@@ -57,6 +57,15 @@ enum TicketStatusType {
     CANCELLED
 }
 
+enum ReactionType {
+    LIKE
+    DISLIKE
+    LOVE
+    LAUGH
+    SAD
+    ANGRY
+}
+
 // ======== MODELS ========
 
 model User {
@@ -90,6 +99,7 @@ model User {
     subscribedEvents    EventSubscription[]
     subscribedCompanies CompanySubscription[]
     payments            Payment[]
+    Reaction            Reaction[]
 
     @@index([email])
     @@map("users")
@@ -126,10 +136,12 @@ model CompanyNews {
     imageUrl  String?  @map("image_url")
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
+    companyId String   @map("company_id")
 
     // Relations
-    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-    companyId String  @map("company_id")
+    company  Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    comments Comment[]
+    reaction Reaction[]
 
     @@index([companyId])
     @@map("company_news")
@@ -305,20 +317,45 @@ model PromoCode {
 }
 
 model Comment {
-    id        String   @id @default(cuid()) @map("id")
-    content   String   @map("content")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-
+    id            String       @id @default(cuid()) @map("id")
+    content       String       @map("content")
+    parentId      String?      @map("reply_id") // ID of the comment being replied to
+    createdAt     DateTime     @default(now()) @map("created_at")
+    updatedAt     DateTime     @updatedAt @map("updated_at")
+    eventId       String?      @map("event_id")
+    companyNewsId String?      @map("company_news_id")
+    userId        String       @map("user_id")
     // Relations
-    event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    eventId String @map("event_id")
-    user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId  String @map("user_id")
+    event         Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+    companyNews   CompanyNews? @relation(fields: [companyNewsId], references: [id], onDelete: Cascade)
+    replies       Comment[]    @relation("CommentReplies")
+    replyTo       Comment?     @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+    reactions     Reaction[]
 
     @@index([eventId])
     @@index([userId])
     @@map("comments")
+}
+
+model Reaction {
+    id        String       @id @default(cuid()) @map("id")
+    type      ReactionType @default(LIKE) @map("type")
+    createdAt DateTime     @default(now()) @map("created_at")
+    userId    String       @map("user_id")
+    commentId String?      @map("comment_id")
+    newsId    String?      @map("news_id")
+
+    // Relations
+    comment Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    news    CompanyNews? @relation(fields: [newsId], references: [id], onDelete: Cascade)
+    user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([commentId, userId])
+    @@unique([newsId, userId])
+    @@index([commentId])
+    @@index([userId])
+    @@map("reactions")
 }
 
 model Payment {
