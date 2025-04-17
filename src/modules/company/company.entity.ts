@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import { Company } from '@prisma/client';
 import {
   ClassTransformOptions,
@@ -8,6 +8,8 @@ import {
 } from 'class-transformer';
 
 import { BaseEntity } from '@/common/base/base.entity';
+import { UserEntity } from '@/core/user/user.entity';
+import { LocationDto } from '@/shared/dto/location.dto';
 import { Paginated } from '@/shared/pagination';
 
 export class CompanyDescription implements Company {
@@ -29,9 +31,6 @@ export class CompanyDescription implements Company {
   @ApiProperty({ example: 'https://acme.com' })
   website: string;
 
-  @ApiProperty({ example: '123 Main St, City, Country' })
-  location: string;
-
   @Exclude()
   stripeAccountId: string;
 
@@ -44,11 +43,32 @@ export class CompanyDescription implements Company {
   @Exclude()
   updatedAt: Date;
 
-  @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
+  @Exclude()
   ownerId: string;
+
+  @ApiProperty({ example: 'https://example.com/cover.jpg' })
+  coverImage: string;
+
+  @Exclude()
+  locationId: string;
 }
 
-export class CompanyEntity extends CompanyDescription implements BaseEntity {
+class CompanyRelations {
+  @ApiProperty({
+    type: () => LocationDto,
+  })
+  @Type(() => LocationDto)
+  location: LocationDto;
+
+  @ApiProperty({ type: () => UserEntity })
+  @Type(() => UserEntity)
+  owner: UserEntity;
+}
+
+export class CompanyEntity
+  extends IntersectionType(CompanyDescription, CompanyRelations)
+  implements BaseEntity
+{
   constructor(data: Company, options?: ClassTransformOptions) {
     super();
     plainToClassFromExist(this, data, options);

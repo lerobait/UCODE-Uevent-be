@@ -67,10 +67,10 @@ export class ReactionService {
 
       return this.databaseService.reaction.upsert({
         where: {
-          newsId_userId: {
-            newsId: dto.newsId,
-            userId,
-          },
+          userId: userId,
+          newsId: dto.newsId,
+          commentId: null,
+          commentId_userId: null,
         },
         update: {
           type: dto.type,

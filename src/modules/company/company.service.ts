@@ -17,18 +17,33 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 
 @Injectable()
 export class CompanyService {
+  private readonly include: Prisma.CompanyInclude = {
+    location: true,
+    owner: true,
+  };
+
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly stripeService: StripeService,
   ) {}
 
   async create(userId: string, dto: CreateCompanyDto) {
+    const { location, ...restDto } = dto;
+
     return await this.databaseService.$transaction(async (prisma) => {
       const company = await prisma.company.create({
         data: {
-          ...dto,
-          ownerId: userId,
+          ...restDto,
+          owner: {
+            connect: {
+              id: userId,
+            },
+          },
+          location: {
+            create: location,
+          },
         },
+        include: this.include,
       });
       const account = await this.stripeService.createConnectAccount({
         business_profile: {
@@ -67,14 +82,20 @@ export class CompanyService {
       throw new NotFoundException('Company not found');
     }
 
+    const { location, ...restDto } = dto;
+
     return this.databaseService.company.update({
       where: {
         id,
         ownerId: userId,
       },
       data: {
-        ...dto,
+        ...restDto,
+        location: {
+          update: location,
+        },
       },
+      include: this.include,
     });
   }
 
@@ -82,6 +103,7 @@ export class CompanyService {
     const data = await this.databaseService.company.findMany({
       skip: (dto.page - 1) * dto.limit,
       take: dto.limit,
+      include: this.include,
     });
     const count = await this.databaseService.company.count();
 
@@ -98,6 +120,7 @@ export class CompanyService {
       },
       skip: (dto.page - 1) * dto.limit,
       take: dto.limit,
+      include: this.include,
     });
 
     const count = await this.databaseService.company.count({
@@ -114,6 +137,7 @@ export class CompanyService {
       where: {
         id,
       },
+      include: this.include,
     });
 
     if (!data) {

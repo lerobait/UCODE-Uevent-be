@@ -1,10 +1,5 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import {
-  AuthProviderType,
-  NotificationChannelType,
-  User,
-  UserRole,
-} from '@prisma/client';
+import { AuthProviderType, User, UserRole } from '@prisma/client';
 import {
   ClassTransformOptions,
   Exclude,
@@ -34,7 +29,6 @@ export class UserDescription implements User {
   @ApiProperty({ example: true })
   emailVerified: boolean;
   @ApiProperty({ example: false })
-  showInAttendeeList: boolean;
   @Exclude()
   @ApiProperty({ example: '2025-04-02T16:27:17Z' })
   createdAt: Date;
@@ -43,14 +37,8 @@ export class UserDescription implements User {
   updatedAt: Date;
   @ApiProperty({ enum: AuthProviderType })
   authProvider: AuthProviderType;
-  @ApiProperty({ enum: NotificationChannelType })
-  eventReminderChannel: NotificationChannelType;
-  @ApiProperty({ enum: NotificationChannelType })
-  ticketPurchaseChannel: NotificationChannelType;
-  @ApiProperty({ enum: NotificationChannelType })
-  newCommentChannel: NotificationChannelType;
-  @ApiProperty({ enum: NotificationChannelType })
-  companyUpdateChannel: NotificationChannelType;
+  @Exclude()
+  settingsId: string;
 }
 
 export class UserRelations {

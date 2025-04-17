@@ -27,13 +27,15 @@ export class EventService {
   ) {}
 
   private readonly include: Prisma.EventInclude = {
-    eventLocation: true,
+    location: true,
     company: true,
   };
 
   async create(userId: string, dto: CreateEventDto) {
+    const { companyId, location, themes, ...restDto } = dto;
+
     const company = await this.databaseService.company.findUnique({
-      where: { id: dto.companyId },
+      where: { id: companyId },
       select: { ownerId: true, stripeAccountId: true, isVerified: true },
     });
 
@@ -58,11 +60,22 @@ export class EventService {
     return await this.databaseService.$transaction(async (prisma) => {
       const data = await prisma.event.create({
         data: {
-          ...dto,
-          creatorId: userId,
-          companyId: dto.companyId,
-          eventLocation: {
-            create: dto.eventLocation,
+          ...restDto,
+          company: {
+            connect: {
+              id: dto.companyId,
+            },
+          },
+          location: {
+            create: location,
+          },
+          creator: {
+            connect: {
+              id: userId,
+            },
+          },
+          themes: {
+            set: themes,
           },
         },
         include: this.include,
@@ -114,7 +127,7 @@ export class EventService {
   async update(id: string, dto: UpdateEventDto, userId: string) {
     const event = await this.databaseService.event.findUnique({
       where: { id },
-      include: { creator: true, eventLocation: true, company: true },
+      include: { creator: true, location: true, company: true },
     });
 
     if (!event) {
@@ -128,20 +141,18 @@ export class EventService {
     }
 
     const shouldRemoveLocation =
-      'eventLocation' in dto
-        ? dto.eventLocation === null
-        : !!event.eventLocation;
+      'eventLocation' in dto ? dto.location === null : !!event.location;
 
     const shouldUpsertLocation =
-      'eventLocation' in dto && dto.eventLocation !== null;
+      'eventLocation' in dto && dto.location !== null;
 
     const eventLocationAction = shouldRemoveLocation
       ? { delete: true }
       : shouldUpsertLocation
         ? {
             upsert: {
-              create: { ...dto.eventLocation },
-              update: { ...dto.eventLocation },
+              create: { ...dto.location },
+              update: { ...dto.location },
             },
           }
         : undefined;
@@ -158,17 +169,22 @@ export class EventService {
       );
     }
 
+    const { themes, ...rest } = dto;
+
     return this.databaseService.event.update({
       where: {
         id,
         creatorId: userId,
       },
       data: {
-        ...dto,
-        ...(eventLocationAction && { eventLocation: eventLocationAction }),
+        ...rest,
+        themes: {
+          set: themes,
+        },
+        location: eventLocationAction,
       },
       include: {
-        eventLocation: true,
+        location: true,
         company: true,
       },
     });
@@ -177,7 +193,7 @@ export class EventService {
   async updatePoster(id: string, userId: string, file: Express.Multer.File) {
     const event = await this.databaseService.event.findUnique({
       where: { id },
-      include: { creator: true, eventLocation: true },
+      include: { creator: true, location: true },
     });
 
     if (!event) {
@@ -376,7 +392,7 @@ export class EventService {
 
     const isBeforeEvent = dayjs(event.publishDate).isBefore(dayjs());
 
-    if (!isBeforeEvent) {
+    if (isBeforeEvent) {
       throw new BadRequestException('Event is not available for purchase');
     }
 
