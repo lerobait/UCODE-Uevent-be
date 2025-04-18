@@ -21,13 +21,13 @@ class CommentDescription implements Comment {
   @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   userId: string;
   @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
-  parentId: string;
-  @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   companyNewsId: string;
-  @Exclude()
+  @ApiProperty({ example: '2025-04-02T16:27:17Z' })
   createdAt: Date;
   @Exclude()
   updatedAt: Date;
+  @Exclude()
+  parentId: string;
 }
 
 class CommentRelations {

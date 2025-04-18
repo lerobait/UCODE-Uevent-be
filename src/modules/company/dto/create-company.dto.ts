@@ -1,11 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
   IsUrl,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+
+import { LocationDto } from '@/shared/dto/location.dto';
 
 export class CreateCompanyDto {
   @ApiProperty({ required: true, example: 'Acme Corporation' })
@@ -36,8 +40,9 @@ export class CreateCompanyDto {
   @IsNotEmpty()
   website: string;
 
-  @ApiProperty({ required: true, example: 'New York, USA' })
-  @IsString()
+  @ApiProperty({ required: true, type: LocationDto })
+  @ValidateNested()
   @IsNotEmpty()
-  location: string;
+  @Type(() => LocationDto)
+  location: LocationDto;
 }

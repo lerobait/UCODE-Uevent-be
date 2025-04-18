@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EventFormatType } from '@prisma/client';
+import { EventFormatType, EventThemeType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsDate,
   IsEnum,
@@ -16,8 +17,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { LocationDto } from '@/shared/dto/location.dto';
+
 import { ValidateDateInTheFuture } from '../validators/validate-date-in-the-future.validator';
-import { CreateEventLocationDto } from './create-event-location.dto';
 
 export class CreateEventDto {
   @ApiProperty({ required: true, example: 'Acme Event' })
@@ -62,11 +64,11 @@ export class CreateEventDto {
   @ValidateDateInTheFuture({ message: 'End date cannot be in the past' })
   endDate: Date;
 
-  @ApiProperty({ required: false, type: () => CreateEventLocationDto })
+  @ApiProperty({ required: false, type: () => LocationDto })
   @IsOptional()
   @ValidateNested()
-  @Type(() => CreateEventLocationDto)
-  eventLocation?: CreateEventLocationDto;
+  @Type(() => LocationDto)
+  location?: LocationDto;
 
   @ApiProperty({ required: false, example: 20.0, default: 0 })
   @IsOptional()
@@ -106,4 +108,12 @@ export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
   companyId: string;
+
+  @ApiProperty({
+    required: true,
+    example: [EventThemeType.ART],
+  })
+  @IsArray()
+  @IsEnum(EventThemeType, { each: true })
+  themes: EventThemeType[];
 }

@@ -1,5 +1,5 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import { Event, EventFormatType, EventLocation } from '@prisma/client';
+import { $Enums, Event, EventFormatType } from '@prisma/client';
 import {
   ClassTransformOptions,
   Exclude,
@@ -9,22 +9,12 @@ import {
 
 import { BaseEntity } from '@/common/base/base.entity';
 import { CompanyDescription } from '@/modules/company/company.entity';
+import { LocationDto } from '@/shared/dto/location.dto';
 import { Paginated } from '@/shared/pagination';
 
-class EventLocationDescription implements EventLocation {
-  @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
-  id: string;
-  @ApiProperty({ example: '123 Main St' })
-  address: string;
-  @ApiProperty({ example: 40.7128 })
-  lat: number;
-  @ApiProperty({ example: -74.006 })
-  lng: number;
-  @Exclude()
-  eventId: string;
-}
-
 class EventDescription implements Event {
+  locationId: string;
+  themes: $Enums.EventThemeType[];
   @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   id: string;
   @ApiProperty({ example: 'Acme Event' })
@@ -71,11 +61,10 @@ class EventDescription implements Event {
 
 export class EventRelations {
   @ApiProperty({
-    type: () => EventLocationDescription,
-    example: { address: '123 Main St', lat: 40.7128, lng: -74.006 },
+    type: () => LocationDto,
   })
-  @Type(() => EventLocationDescription)
-  eventLocation: EventLocationDescription;
+  @Type(() => LocationDto)
+  location: LocationDto;
 
   @ApiProperty({ type: () => CompanyDescription })
   @Type(() => CompanyDescription)
