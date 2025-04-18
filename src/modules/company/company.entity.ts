@@ -37,19 +37,19 @@ export class CompanyDescription implements Company {
   @ApiProperty()
   isVerified: boolean;
 
-  @Exclude()
+  @ApiProperty({ example: '2025-04-02T16:27:17Z' })
   createdAt: Date;
 
-  @Exclude()
+  @ApiProperty({ example: '2025-04-02T16:27:17Z' })
   updatedAt: Date;
 
-  @Exclude()
+  @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   ownerId: string;
 
   @ApiProperty({ example: 'https://example.com/cover.jpg' })
   coverImage: string;
 
-  @Exclude()
+  @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   locationId: string;
 }
 

@@ -28,8 +28,6 @@ export class UserDescription implements User {
   role: UserRole;
   @ApiProperty({ example: true })
   emailVerified: boolean;
-  @ApiProperty({ example: false })
-  @Exclude()
   @ApiProperty({ example: '2025-04-02T16:27:17Z' })
   createdAt: Date;
   @Exclude()

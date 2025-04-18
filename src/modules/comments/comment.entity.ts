@@ -22,12 +22,12 @@ class CommentDescription implements Comment {
   userId: string;
   @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   companyNewsId: string;
-  @Exclude()
+  @ApiProperty({ example: '2025-04-02T16:27:17Z' })
   createdAt: Date;
   @Exclude()
   updatedAt: Date;
   @Exclude()
-  replyId: string;
+  parentId: string;
 }
 
 class CommentRelations {
