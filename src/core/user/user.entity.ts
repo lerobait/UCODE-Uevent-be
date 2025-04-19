@@ -18,7 +18,6 @@ export class UserDescription implements User {
   @ApiProperty({ example: 'micha21cloz@gmail.com' })
   email: string;
   @Exclude()
-  @ApiProperty({ example: 'Pass123@' })
   password: string;
   @ApiProperty({ example: 'https://example.com/avatar.png' })
   avatar: string;
