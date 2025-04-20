@@ -408,6 +408,7 @@ export class EventService {
           userId,
           eventId: id,
         },
+        allow_promotion_codes: true,
       },
       event.company.stripeAccountId,
     );

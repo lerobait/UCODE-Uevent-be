@@ -3,17 +3,21 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 
 import { Success } from '@/core/auth/dto/success.dto';
 import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { DatabaseService } from '@/core/db/database.service';
+import { PaginationOptionsDto } from '@/shared/pagination';
 
 import { StripeService } from '../stripe/stripe.service';
 import { PaginatedCompany } from './company.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { CreatePromoCodeDto } from './dto/create-promo-code.dto';
 import { GetCompanyDto } from './dto/get-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { PaginatedPromoCode } from './promo-code.entity';
 
 @Injectable()
 export class CompanyService {
@@ -25,6 +29,7 @@ export class CompanyService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly stripeService: StripeService,
+    private readonly cs: ConfigService,
   ) {}
 
   async create(userId: string, dto: CreateCompanyDto) {
@@ -172,8 +177,11 @@ export class CompanyService {
       throw new NotFoundException('Company not found');
     }
 
+    const returnUrl = `${this.cs.get('app').clientUrl}/companies/${id}`;
+
     const data = await this.stripeService.createOnboardingLink(
       company.stripeAccountId,
+      returnUrl,
     );
 
     return new UrlResponse(data.url);
@@ -257,5 +265,114 @@ export class CompanyService {
     }
 
     return new Success();
+  }
+
+  async createPromoCode(
+    companyId: string,
+    userId: string,
+    dto: CreatePromoCodeDto,
+  ) {
+    const company = await this.databaseService.company.findUnique({
+      where: {
+        id: companyId,
+        ownerId: userId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    if (!company.stripeAccountId) {
+      throw new BadRequestException('Company is not connected to Stripe');
+    }
+
+    if (!company.isVerified) {
+      throw new BadRequestException('Company is not verified');
+    }
+
+    const {
+      code,
+      id,
+      coupon: { id: stripeCouponId },
+    } = await this.stripeService.createCoupon(
+      {
+        max_redemptions: dto.maxUses,
+        percent_off: dto.discount,
+        metadata: {
+          company: companyId,
+        },
+      },
+      company.stripeAccountId,
+    );
+
+    const data = await this.databaseService.promoCode.create({
+      data: {
+        code,
+        maxUses: dto.maxUses,
+        companyId,
+        stripeId: id,
+        stripeCouponId,
+      },
+    });
+
+    return data;
+  }
+
+  async deletePromoCode(id: string, companyId: string) {
+    const data = await this.databaseService.promoCode.findUnique({
+      where: {
+        id,
+        companyId,
+      },
+      include: {
+        company: true,
+      },
+    });
+
+    if (!data) {
+      throw new NotFoundException('Promo code not found');
+    }
+
+    await this.stripeService.removeCoupon(
+      data.stripeCouponId,
+      data.company.stripeAccountId,
+    );
+
+    await this.databaseService.promoCode.delete({
+      where: {
+        id,
+      },
+    });
+
+    return new Success();
+  }
+
+  async findAllPromoCodes(
+    companyId: string,
+    userId: string,
+    dto: PaginationOptionsDto,
+  ) {
+    const data = await this.databaseService.promoCode.findMany({
+      where: {
+        company: {
+          id: companyId,
+          ownerId: userId,
+        },
+      },
+      skip: (dto.page - 1) * dto.limit,
+      take: dto.limit,
+    });
+
+    const count = await this.databaseService.promoCode.count({
+      where: {
+        company: {
+          id: companyId,
+          ownerId: userId,
+        },
+      },
+    });
+
+    return new PaginatedPromoCode(data, count, dto);
   }
 }

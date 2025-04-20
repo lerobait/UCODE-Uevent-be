@@ -165,6 +165,7 @@ model Company {
     events      Event[]
     news        CompanyNews[]
     subscribers CompanySubscription[]
+    promocodes  PromoCode[]
 
     @@index([ownerId])
     @@map("companies")
@@ -293,7 +294,6 @@ model Ticket {
     purchaseDate DateTime         @default(now()) @map("purchase_date")
     status       TicketStatusType @default(VALID) @map("status")
     attendeeId   String           @unique @map("attendee_id")
-    promoCodeId  String?          @map("promo_code_id")
     eventId      String           @map("event_id")
     userId       String           @map("user_id")
 
@@ -307,6 +307,21 @@ model Ticket {
     @@index([userId])
     @@index([purchaseDate])
     @@map("tickets")
+}
+
+model PromoCode {
+    id             String @id @default(cuid()) @map("id")
+    companyId      String @map("company_id")
+    code           String @map("code")
+    maxUses        Int    @map("max_uses")
+    uses           Int    @default(0) @map("uses")
+    stripeId       String @unique @map("stripe_id")
+    stripeCouponId String @unique @map("stripe_coupon_id")
+
+    // Relations
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@map("promo_codes")
 }
 
 model Comment {
