@@ -1,6 +1,6 @@
 import {
   DeleteObjectCommand,
-  ObjectCannedACL,
+  // ObjectCannedACL,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -29,7 +29,7 @@ export class FileUploadService {
       Key: `${nanoid()}-${file.originalname}`,
       Body: file.buffer,
       ContentType: file.mimetype,
-      ACL: ObjectCannedACL.public_read,
+      // ACL: ObjectCannedACL.public_read,
     };
 
     const command = new PutObjectCommand(params);

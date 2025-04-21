@@ -3,15 +3,34 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseFilePipeBuilder,
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
 import { Prefix } from '@/common/enums/prefix.enum';
+import { Success } from '@/core/auth/dto/success.dto';
 import { JwtPayload } from '@/core/auth/interface/jwt.interface';
+import {
+  IMG_ALLOWED_TYPES,
+  IMG_MAX_SIZE,
+} from '@/core/file-upload/file-upload.contsants';
+import {
+  UploadFileSizeValidator,
+  UploadFileTypeValidator,
+} from '@/core/file-upload/validators';
 import { GetCurrentUser, Public } from '@/shared/decorators';
 import { IDDto } from '@/shared/dto';
 import { PaginationOptionsDto } from '@/shared/pagination';
@@ -72,5 +91,40 @@ export class CompanyNewsController {
   @Delete(':id')
   async delete(@Param() { id }: IDDto, @GetCurrentUser() { sub }: JwtPayload) {
     return new CompanyNewsEntity(await this.companyNewsService.delete(sub, id));
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: Success })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('cover'))
+  @Patch(':id/cover')
+  async updateCover(
+    @Param() { id }: IDDto,
+    @GetCurrentUser() { sub }: JwtPayload,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new UploadFileTypeValidator({ fileType: IMG_ALLOWED_TYPES }),
+        )
+        .addValidator(new UploadFileSizeValidator({ maxSize: IMG_MAX_SIZE }))
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          fileIsRequired: true,
+        }),
+    )
+    cover: Express.Multer.File,
+  ) {
+    return this.companyNewsService.updateCover(id, sub, cover);
   }
 }

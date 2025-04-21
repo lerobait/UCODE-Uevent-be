@@ -21,6 +21,9 @@ class PromoCodeDescription implements PromoCode {
   @ApiProperty({ example: 20 })
   uses: number;
 
+  @ApiProperty({ example: 20 })
+  discount: number;
+
   @Exclude()
   stripeId: string;
 
