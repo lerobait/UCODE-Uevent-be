@@ -114,6 +114,22 @@ export class StripeController {
           });
         });
       }
+      case 'promotion_code.updated': {
+        const promoId = event.data.object.id;
+
+        if (!('times_redeemed' in event.data.object)) {
+          return;
+        }
+
+        await this.databaseService.promoCode.update({
+          where: {
+            stripeId: promoId,
+          },
+          data: {
+            uses: event.data.object.times_redeemed,
+          },
+        });
+      }
 
       default:
         break;

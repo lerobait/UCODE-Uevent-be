@@ -13,8 +13,15 @@ import { LocationDto } from '@/shared/dto/location.dto';
 import { Paginated } from '@/shared/pagination';
 
 class EventDescription implements Event {
+  @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   locationId: string;
+
+  @ApiProperty({
+    enum: $Enums.EventFormatType,
+    example: $Enums.EventFormatType.CEREMONY,
+  })
   themes: $Enums.EventThemeType[];
+
   @ApiProperty({ example: '60d21b4667d0d8992e610c85' })
   id: string;
   @ApiProperty({ example: 'Acme Event' })

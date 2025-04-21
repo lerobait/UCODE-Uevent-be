@@ -20,12 +20,18 @@ import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { JwtPayload } from '@/core/auth/interface/jwt.interface';
 import { GetCurrentUser, Public } from '@/shared/decorators';
 import { IDDto } from '@/shared/dto';
+import { PaginationOptionsDto } from '@/shared/pagination';
 
 import { CompanyEntity, PaginatedCompany } from './company.entity';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import {
+  CreatePromoCodeDto,
+  PromoCodeQueryDto,
+} from './dto/create-promo-code.dto';
 import { GetCompanyDto } from './dto/get-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { PaginatedPromoCode, PromoCodeEntity } from './promo-code.entity';
 
 @Controller(Prefix.COMPANIES)
 export class CompanyController {
@@ -122,5 +128,36 @@ export class CompanyController {
     @Param() { id }: IDDto,
   ) {
     return this.companyService.createDashboardLink(id, sub);
+  }
+
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: PromoCodeEntity })
+  @Post(':id/promo-code')
+  async createPromoCode(
+    @Param() { id }: IDDto,
+    @Body() dto: CreatePromoCodeDto,
+    @GetCurrentUser() { sub }: JwtPayload,
+  ) {
+    return new PromoCodeEntity(
+      await this.companyService.createPromoCode(id, sub, dto),
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: Success })
+  @Delete(':id/promo-code/:promoCodeId')
+  async deletePromoCode(@Param() { id, promoCodeId }: PromoCodeQueryDto) {
+    return this.companyService.deletePromoCode(promoCodeId, id);
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: PaginatedPromoCode, isArray: true })
+  @Get(':id/promo-code')
+  async findAllPromoCodes(
+    @Param() { id }: IDDto,
+    @GetCurrentUser() { sub }: JwtPayload,
+    @Query() dto: PaginationOptionsDto,
+  ) {
+    return this.companyService.findAllPromoCodes(id, sub, dto);
   }
 }

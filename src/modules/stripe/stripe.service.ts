@@ -45,12 +45,12 @@ export class StripeService {
     return await this.stripe.accounts.createLoginLink(id);
   }
 
-  async createOnboardingLink(id: string) {
+  async createOnboardingLink(id: string, returnUrl: string) {
     return await this.stripe.accountLinks.create({
       account: id,
       type: 'account_onboarding',
-      return_url: 'http://localhost:3000', // TODO Actual FE URL
-      refresh_url: 'http://localhost:3000', // TODO Actual FE URL,
+      return_url: returnUrl,
+      refresh_url: returnUrl,
     });
   }
 
@@ -116,4 +116,42 @@ export class StripeService {
   }
 
   // PAYMENTS END
+
+  // COUPONS START
+
+  async createCoupon(data: Stripe.CouponCreateParams, stripeAccount: string) {
+    const coupon = await this.stripe.coupons.create(data, {
+      stripeAccount,
+    });
+
+    const promoCode = await this.stripe.promotionCodes.create(
+      {
+        coupon: coupon.id,
+        max_redemptions: data.max_redemptions,
+      },
+      {
+        stripeAccount,
+      },
+    );
+
+    return promoCode;
+  }
+
+  async updateCoupon(id: string, data: Stripe.CouponUpdateParams) {
+    return await this.stripe.promotionCodes.update(id, data);
+  }
+
+  async removeCoupon(id: string, stripeAccount: string) {
+    return await this.stripe.coupons.del(id, {
+      stripeAccount,
+    });
+  }
+
+  async listCoupons(stripeAccount: string) {
+    return await this.stripe.promotionCodes.list({
+      stripeAccount,
+    });
+  }
+
+  // COUPONS END
 }
