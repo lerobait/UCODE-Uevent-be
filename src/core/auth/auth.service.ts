@@ -13,7 +13,7 @@ import ResetPasswordLink from 'src/emails/reset-password';
 import { ApiConfigService } from '../../config/api-config.service';
 import { DatabaseService } from '../db/database.service';
 import { MailService } from '../mail/mail.service';
-import { UserEntity } from '../user/user.entity';
+import { UserEntity } from '../user/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';

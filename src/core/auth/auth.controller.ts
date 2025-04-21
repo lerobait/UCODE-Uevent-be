@@ -12,7 +12,7 @@ import { Public } from 'src/shared/decorators/public.decorator';
 import { SkipAccessTokenCheck } from 'src/shared/decorators/skip-access-token-check.decorator';
 
 import { Prefix } from '../../common/enums/prefix.enum';
-import { UserEntity } from '../user/user.entity';
+import { UserEntity } from '../user/entities/user.entity';
 import { AuthService } from './auth.service';
 import { EmailDto } from './dto/email.dto';
 import { LoginDto } from './dto/login.dto';

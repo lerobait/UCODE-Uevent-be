@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   ParseFilePipeBuilder,
   Patch,
   UploadedFile,
@@ -23,13 +24,15 @@ import {
 import { GetCurrentUser } from '@/shared/decorators/get-current-user.decorator';
 
 import { Prefix } from '../../common/enums/prefix.enum';
+import { IDDto } from '../../shared/dto';
 import { JwtPayload } from '../auth/interface/jwt.interface';
 import {
   IMG_ALLOWED_TYPES,
   IMG_MAX_SIZE,
 } from '../file-upload/file-upload.contsants';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserEntity } from './user.entity';
+import { UpdateUserSettingsDto } from './dto/update-user-settings.dto';
+import { UserEntity } from './entities/user.entity';
 import { UserService } from './user.service';
 
 @ApiBearerAuth()
@@ -43,6 +46,12 @@ export class UserController {
     return new UserEntity(await this.userService.me(sub));
   }
 
+  @Get(':id')
+  @ApiOkResponse({ type: UserEntity })
+  async getById(@Param() { id }: IDDto): Promise<UserEntity> {
+    return new UserEntity(await this.userService.getById(id));
+  }
+
   @Patch('me')
   @ApiOkResponse({ type: UserEntity })
   async update(
@@ -50,6 +59,15 @@ export class UserController {
     @GetCurrentUser() { sub }: JwtPayload,
   ): Promise<UserEntity> {
     return new UserEntity(await this.userService.update(sub, dto));
+  }
+
+  @Patch('me/settings')
+  @ApiOkResponse({ type: UserEntity })
+  async updateSettings(
+    @Body() dto: UpdateUserSettingsDto,
+    @GetCurrentUser() { sub }: JwtPayload,
+  ): Promise<UserEntity> {
+    return new UserEntity(await this.userService.updateSettings(sub, dto));
   }
 
   @ApiOkResponse({ type: UserEntity })
@@ -66,7 +84,7 @@ export class UserController {
     },
   })
   @UseInterceptors(FileInterceptor('avatar'))
-  @Patch('/avatar')
+  @Patch('me/avatar')
   async updateAvatar(
     @GetCurrentUser() { sub }: JwtPayload,
     @UploadedFile(
