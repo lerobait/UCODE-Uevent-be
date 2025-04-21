@@ -7,8 +7,8 @@ import {
   Type,
 } from 'class-transformer';
 
-import { BaseEntity } from '../../common/base/base.entity';
-import { Paginated } from '../../shared/pagination';
+import { BaseEntity } from '../../../common/base/base.entity';
+import { Paginated } from '../../../shared/pagination';
 
 export class UserDescription implements User {
   @ApiProperty({ example: 'qwcqwdocq12djq2ewff232' })

@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { DatabaseService } from '../db/database.service';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserSettingsDto } from './dto/update-user-settings.dto';
 
 @Injectable()
 export class UserService {
@@ -12,17 +13,8 @@ export class UserService {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
-  static USER_SELECT: Prisma.UserSelect = {
-    id: true,
-    email: true,
-    name: true,
-    avatar: true,
-    bio: true,
-    createdAt: true,
-    updatedAt: true,
-    role: true,
-    sentNotifications: true,
-    emailVerified: true,
+  private include: Prisma.UserInclude = {
+    settings: true,
   };
 
   async me(userId: string) {
@@ -30,7 +22,15 @@ export class UserService {
       where: {
         id: userId,
       },
-      select: UserService.USER_SELECT,
+      include: this.include,
+    });
+  }
+
+  async getById(userId: string) {
+    return this.databaseService.user.findUnique({
+      where: {
+        id: userId,
+      },
     });
   }
 
@@ -44,7 +44,7 @@ export class UserService {
       data: {
         avatar,
       },
-      select: UserService.USER_SELECT,
+      include: this.include,
     });
   }
 
@@ -56,7 +56,31 @@ export class UserService {
       data: {
         ...dto,
       },
-      select: UserService.USER_SELECT,
+      include: this.include,
+    });
+  }
+
+  async updateSettings(userId: string, dto: UpdateUserSettingsDto) {
+    return this.databaseService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        settings: {
+          upsert: {
+            create: {
+              ...dto,
+            },
+            update: {
+              ...dto,
+            },
+            where: {
+              userId,
+            },
+          },
+        },
+      },
+      include: this.include,
     });
   }
 }
