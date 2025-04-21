@@ -315,6 +315,7 @@ model PromoCode {
     code           String @map("code")
     maxUses        Int    @map("max_uses")
     uses           Int    @default(0) @map("uses")
+    discount       Int    @map("discount")
     stripeId       String @unique @map("stripe_id")
     stripeCouponId String @unique @map("stripe_coupon_id")
 

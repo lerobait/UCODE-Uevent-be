@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 import { Success } from '@/core/auth/dto/success.dto';
 import { UrlResponse } from '@/core/auth/dto/url.dto';
 import { DatabaseService } from '@/core/db/database.service';
+import { FileUploadService } from '@/core/file-upload/file-upload.service';
 import { PaginationOptionsDto } from '@/shared/pagination';
 
 import { StripeService } from '../stripe/stripe.service';
@@ -29,6 +30,7 @@ export class CompanyService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly stripeService: StripeService,
+    private readonly fileUploadService: FileUploadService,
     private readonly cs: ConfigService,
   ) {}
 
@@ -163,6 +165,45 @@ export class CompanyService {
       .catch(() => {
         throw new NotFoundException('Company not found');
       });
+  }
+
+  async updateImage(
+    id: string,
+    userId: string,
+    file: Express.Multer.File,
+    type: 'logo' | 'cover' = 'logo',
+  ) {
+    const company = await this.databaseService.company.findUnique({
+      where: {
+        id,
+        ownerId: userId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const { location } = await this.fileUploadService.upload(file);
+
+    const data: Prisma.CompanyUpdateInput =
+      type === 'logo'
+        ? {
+            logo: location,
+          }
+        : {
+            coverImage: location,
+          };
+
+    await this.databaseService.company.update({
+      where: {
+        id,
+        ownerId: userId,
+      },
+      data,
+    });
+
+    return new Success();
   }
 
   async createOnboardingLink(id: string, userId: string) {
@@ -306,10 +347,12 @@ export class CompanyService {
       company.stripeAccountId,
     );
 
+    console.log('🚀 ~ CompanyService ~ dto.discount:', dto.discount);
     const data = await this.databaseService.promoCode.create({
       data: {
         code,
         maxUses: dto.maxUses,
+        discount: dto.discount,
         companyId,
         stripeId: id,
         stripeCouponId,

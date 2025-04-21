@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { Success } from '@/core/auth/dto/success.dto';
 import { DatabaseService } from '@/core/db/database.service';
+import { FileUploadService } from '@/core/file-upload/file-upload.service';
 import { PaginationOptionsDto } from '@/shared/pagination';
 
 import { PaginatedCompanyNewsEntity } from './company-news.entity';
@@ -9,7 +11,10 @@ import { UpdateCompanyNewsDto } from './dto/update-company-news.dto';
 
 @Injectable()
 export class CompanyNewsService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly fileUploadService: FileUploadService,
+  ) {}
 
   async create(userId: string, dto: CreateCompanyNewsDto) {
     const company = await this.databaseService.company.findUnique({
@@ -32,26 +37,56 @@ export class CompanyNewsService {
   }
 
   async update(id: string, dto: UpdateCompanyNewsDto, userId: string) {
-    const company = await this.databaseService.company.findUnique({
+    const newsItem = await this.databaseService.companyNews.findUnique({
       where: {
         id,
-        ownerId: userId,
+        company: {
+          ownerId: userId,
+        },
       },
     });
 
-    if (!company) {
-      throw new NotFoundException('Company not found');
+    if (!newsItem) {
+      throw new NotFoundException('Company news not found');
     }
 
     return this.databaseService.companyNews.update({
       where: {
         id,
       },
-      data: {
-        ...dto,
-        companyId: id,
+      data: dto,
+      include: {
+        company: true,
       },
     });
+  }
+
+  async updateCover(id: string, userId: string, cover: Express.Multer.File) {
+    const newsItem = await this.databaseService.companyNews.findUnique({
+      where: {
+        id,
+        company: {
+          ownerId: userId,
+        },
+      },
+    });
+
+    if (!newsItem) {
+      throw new NotFoundException('Company news not found');
+    }
+
+    const { location } = await this.fileUploadService.upload(cover);
+
+    await this.databaseService.companyNews.update({
+      where: {
+        id,
+      },
+      data: {
+        imageUrl: location,
+      },
+    });
+
+    return new Success();
   }
 
   async findAllByCompany(companyId: string, dto: PaginationOptionsDto) {
@@ -76,7 +111,7 @@ export class CompanyNewsService {
         id,
       },
       include: {
-        company: true,
+        company: { include: { location: true } },
       },
     });
 
