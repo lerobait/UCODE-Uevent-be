@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { DatabaseService } from '@/core/db/database.service';
 
@@ -20,8 +21,14 @@ export class CommentService {
     private readonly notificationService: NotificationService,
   ) {}
 
+  include: Prisma.CommentInclude = {
+    user: true,
+    _count: {
+      select: { replies: true, reactions: true },
+    },
+  };
   async create(userId: string, dto: CreateCommentDto) {
-    if (!dto.eventId && !dto.companyNewsId && !dto.parentId) {
+    if (!dto.eventId && !dto.newsId && !dto.parentId) {
       throw new BadRequestException(
         'Either eventId or companyNewsId or parentId must be provided',
       );
@@ -37,9 +44,9 @@ export class CommentService {
       }
     }
 
-    if (dto.companyNewsId) {
+    if (dto.newsId) {
       const news = await this.databaseService.companyNews.findUnique({
-        where: { id: dto.companyNewsId },
+        where: { id: dto.newsId },
       });
 
       if (!news) {
@@ -59,12 +66,13 @@ export class CommentService {
 
     const comment = await this.databaseService.comment.create({
       data: {
-        ...dto,
+        content: dto.content,
+        eventId: dto.eventId,
+        companyNewsId: dto.newsId,
+        parentId: dto.parentId,
         userId,
       },
-      include: {
-        user: true,
-      },
+      include: this.include,
     });
 
     if (dto.parentId) {
@@ -110,9 +118,7 @@ export class CommentService {
       data: {
         ...dto,
       },
-      include: {
-        user: true,
-      },
+      include: this.include,
     });
   }
 
@@ -121,9 +127,7 @@ export class CommentService {
       where: {
         id,
       },
-      include: {
-        user: true,
-      },
+      include: this.include,
     });
 
     if (!data) {
@@ -136,7 +140,6 @@ export class CommentService {
   async delete(userId: string, id: string) {
     const comment = await this.databaseService.comment.findUnique({
       where: { id },
-      include: { user: true },
     });
 
     if (!comment) {
@@ -149,57 +152,39 @@ export class CommentService {
       );
     }
 
-    return this.databaseService.comment.delete({ where: { id } }).catch(() => {
-      throw new NotFoundException('Comment not found');
+    return await this.databaseService.comment.delete({
+      where: { id },
+      include: this.include,
     });
   }
 
   async findAll(dto: GetCommentDto) {
-    const where: any = {};
+    const where: Prisma.CommentWhereInput = {};
     if (dto.eventId) where.eventId = dto.eventId;
-    if (dto.companyNewsId) where.companyNewsId = dto.companyNewsId;
+    if (dto.newsId) where.companyNewsId = dto.newsId;
     if (dto.parentId) where.parentId = dto.parentId;
 
     const sortBy = dto.sortBy || 'date';
     const sortOrder = dto.sortOrder || 'desc';
 
-    if (sortBy === 'popularity') {
-      const data = await this.databaseService.comment.findMany({
-        where,
-        include: {
-          user: true,
-          _count: {
-            select: { reactions: true },
-          },
-        },
-        orderBy: {
-          reactions: {
-            _count: sortOrder,
-          },
-        },
-        skip: (dto.page - 1) * dto.limit,
-        take: dto.limit,
-      });
+    const data = await this.databaseService.comment.findMany({
+      where,
+      include: this.include,
+      orderBy: {
+        reactions:
+          sortBy === 'popularity'
+            ? {
+                _count: sortOrder,
+              }
+            : undefined,
+        createdAt: sortBy === 'date' ? sortOrder : undefined,
+      },
+      skip: (dto.page - 1) * dto.limit,
+      take: dto.limit,
+    });
 
-      const count = await this.databaseService.comment.count({ where });
+    const count = await this.databaseService.comment.count({ where });
 
-      return new PaginatedComment(data, count, dto);
-    } else {
-      const data = await this.databaseService.comment.findMany({
-        where,
-        include: {
-          user: true,
-        },
-        orderBy: {
-          createdAt: sortOrder,
-        },
-        skip: (dto.page - 1) * dto.limit,
-        take: dto.limit,
-      });
-
-      const count = await this.databaseService.comment.count({ where });
-
-      return new PaginatedComment(data, count, dto);
-    }
+    return new PaginatedComment(data, count, dto);
   }
 }
