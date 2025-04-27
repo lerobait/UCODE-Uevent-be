@@ -78,8 +78,10 @@ export class GetEventDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsEnum(['date', 'price-low', 'price-high', 'name'], { each: true })
-  sort?: 'date' | 'price-low' | 'price-high' | 'name';
+  @IsEnum(['date-asc', 'date-desc', 'price-low', 'price-high', 'name'], {
+    each: true,
+  })
+  sort?: 'date-asc' | 'date-desc' | 'price-low' | 'price-high' | 'name';
 
   @ApiProperty({
     required: false,

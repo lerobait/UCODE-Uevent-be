@@ -239,22 +239,16 @@ export class EventService {
   }
   async findAll(dto: GetEventDto, userId?: string): Promise<PaginatedEvent> {
     this.validateLocationParams(dto);
-
     const isLocationSearch = dto.lat !== undefined && dto.lng !== undefined;
-    const isPagination = dto.page !== undefined && dto.limit !== undefined;
+    const isPagination = !isLocationSearch;
 
     const where = this.buildWhereClause(dto, userId);
     const orderBy = this.buildOrderBy(dto);
-
-    const skip = isPagination
-      ? ((dto.page ?? DEFAULT_PAGE) - 1) * (dto.limit ?? DEFAULT_ITEMS_LIMIT)
-      : 0;
-
     const take = isPagination
       ? (dto.limit ?? DEFAULT_ITEMS_LIMIT)
-      : isLocationSearch
-        ? DEFAULT_EVENTS_LOACTION_SEARCH_LIMIT
-        : DEFAULT_ITEMS_LIMIT;
+      : (dto.limit ?? DEFAULT_EVENTS_LOACTION_SEARCH_LIMIT);
+
+    const skip = ((dto.page ?? DEFAULT_PAGE) - 1) * take;
 
     try {
       const [data, count] = await Promise.all([
@@ -314,14 +308,6 @@ export class EventService {
     if (userId) where.creatorId = userId;
 
     if (dto.lat !== undefined && dto.lng !== undefined) {
-      console.log(
-        'dto.radius',
-        dto.radius,
-        'dto.lat',
-        dto.lat,
-        'dto.lng',
-        dto.lng,
-      );
       const latDeg = dto.radius / KILOMETERS_IN_DEGREE;
       const lngDeg =
         dto.radius / (KILOMETERS_IN_DEGREE * Math.cos(this.toRad(dto.lat)));
@@ -338,10 +324,6 @@ export class EventService {
   private buildOrderBy(
     dto: GetEventDto,
   ): Prisma.EventOrderByWithAggregationInput {
-    const defaultSort: Prisma.EventOrderByWithAggregationInput = {
-      publishDate: 'asc',
-    };
-
     switch (dto.sort) {
       case 'name':
         return { title: 'asc' };
@@ -349,9 +331,14 @@ export class EventService {
         return { price: 'desc' };
       case 'price-low':
         return { price: 'asc' };
-      case 'date':
+      case 'date-asc':
+        return { startDate: 'asc' };
+      case 'date-desc':
+        return { startDate: 'desc' };
       default:
-        return defaultSort;
+        return {
+          startDate: 'asc',
+        };
     }
   }
 
