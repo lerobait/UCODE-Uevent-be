@@ -71,6 +71,7 @@ export class StripeController {
       case 'checkout.session.completed': {
         const isPaid = event.data.object.payment_status === 'paid';
         const metadata = event.data.object.metadata;
+        console.log('🚀 ~ StripeController ~ metadata:', metadata);
 
         if (!metadata.eventId || !metadata.userId) {
           throw new BadRequestException('Missing metadata properties');
@@ -85,43 +86,53 @@ export class StripeController {
             id: metadata.eventId,
           },
         });
+        console.log('🚀 ~ StripeController ~ eventData:', eventData);
 
         if (!eventData) {
           throw new BadRequestException('eventData not found');
         }
 
-        await this.databaseService.$transaction(async (prisma) => {
-          const attendee = await prisma.eventAttendee.create({
-            data: {
-              userId: metadata.userId,
-              eventId: metadata.eventId,
-            },
+        await this.databaseService
+          .$transaction(async (prisma) => {
+            const attendee = await prisma.eventAttendee.create({
+              data: {
+                userId: metadata.userId,
+                eventId: metadata.eventId,
+              },
+            });
+            console.log(
+              '🚀 ~ StripeController ~ awaitthis.databaseService.$transaction ~ attendee:',
+              attendee,
+            );
+
+            const ticket = await prisma.ticket.create({
+              data: {
+                attendeeId: attendee.id,
+                userId: metadata.userId,
+                eventId: metadata.eventId,
+              },
+            });
+
+            await prisma.payment.create({
+              data: {
+                amount: eventData.price,
+                userId: metadata.userId,
+                ticketId: ticket.id,
+                status: PaymentStatusType.COMPLETED,
+              },
+            });
+          })
+          .catch((e) => {
+            console.log('🚀 ~ StripeController ~ e:', e);
+            throw new BadRequestException('Transaction failed');
           });
 
-          const ticket = await prisma.ticket.create({
-            data: {
-              attendeeId: attendee.id,
-              userId: metadata.userId,
-              eventId: metadata.eventId,
-            },
-          });
-
-          await prisma.payment.create({
-            data: {
-              amount: eventData.price,
-              userId: metadata.userId,
-              ticketId: ticket.id,
-              status: PaymentStatusType.COMPLETED,
-            },
-          });
-        });
-
-        this.notificationService.createEventPurchaseNotification(
+        await this.notificationService.createEventPurchaseNotification(
           metadata.userId,
           metadata.eventId,
         );
 
-        this.notificationService.notifyEventCreatorOnNewAttendee(
+        await this.notificationService.notifyEventCreatorOnNewAttendee(
           metadata.eventId,
           metadata.userId,
         );

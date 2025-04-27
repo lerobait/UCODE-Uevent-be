@@ -14,12 +14,18 @@ import * as React from 'react';
 interface ComapnyEventPurchaseProps {
   name: string;
   eventTitle: string;
+  price: number;
+  eventStartDate: string;
+  eventEndDate: string;
   link: string;
 }
 
-export const ComapnyEventPurchase = ({
+export const CompanyEventPurchase = ({
   name,
   eventTitle,
+  price,
+  eventStartDate,
+  eventEndDate,
   link,
 }: ComapnyEventPurchaseProps) => {
   return (
@@ -32,20 +38,32 @@ export const ComapnyEventPurchase = ({
         <Container style={container}>
           <Heading style={heading}>Hi {name},</Heading>
           <Text style={text}>
-            Your purchase was successful! You've secured your spot for:
+            Your purchase was successful! You've secured your spot for{' '}
+            <b style={bold}>{eventTitle}</b>.
           </Text>
+
           <Section style={eventBlock}>
             <Text style={eventTitleStyle}>{eventTitle}</Text>
-            <Link style={linkStyle} href={link}>
-              View your ticket →
+            <Text style={eventDate}>
+              {eventStartDate} - {eventEndDate}
+            </Text>
+            <Text style={eventPrice}>Price: ${price}</Text>
+          </Section>
+
+          <Section style={btnContainer}>
+            <Link style={button} href={link}>
+              View Event Details
             </Link>
           </Section>
+
           <Text style={text}>
-            We look forward to seeing you at the event. You can find all the
-            event details by clicking the link above.
+            We look forward to seeing you at the event! You can find all the
+            details by clicking the link above.
           </Text>
-          <Text style={footerText}>
-            Need help or have questions? Contact our support anytime.
+          <Text style={paragraph}>
+            Best,
+            <br />
+            The Uevent Team
           </Text>
         </Container>
       </Body>
@@ -53,56 +71,83 @@ export const ComapnyEventPurchase = ({
   );
 };
 
-export default ComapnyEventPurchase;
+export default CompanyEventPurchase;
 
 const main = {
-  backgroundColor: '#f9fafb',
-  fontFamily: 'Arial, sans-serif',
-  padding: '24px',
+  backgroundColor: '#ffffff',
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
 };
 
 const container = {
   backgroundColor: '#ffffff',
-  padding: '32px',
-  borderRadius: '8px',
-  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
+  padding: '40px 32px',
+  borderRadius: '12px',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+  maxWidth: '600px',
+  margin: '0 auto',
 };
 
 const heading = {
-  fontSize: '20px',
-  fontWeight: 'bold',
-  marginBottom: '12px',
-};
-
-const text = {
-  fontSize: '14px',
-  color: '#333333',
-  marginBottom: '8px',
-};
-
-const eventBlock = {
-  backgroundColor: '#d1fae5',
-  padding: '16px',
-  borderRadius: '6px',
-  marginTop: '12px',
+  fontSize: '24px',
+  fontWeight: '700',
+  color: '#111827',
   marginBottom: '16px',
 };
 
-const eventTitleStyle = {
+const text = {
   fontSize: '16px',
-  fontWeight: 'bold',
+  color: '#4b5563',
+  lineHeight: '24px',
+  marginBottom: '16px',
+};
+
+const bold = {
+  color: '#111827',
+};
+
+const eventBlock = {
+  backgroundColor: '#ecfdf5',
+  padding: '20px',
+  borderRadius: '8px',
+  marginTop: '20px',
+  marginBottom: '24px',
+};
+
+const eventTitleStyle = {
+  fontSize: '18px',
+  fontWeight: '600',
   color: '#047857',
   marginBottom: '8px',
 };
 
-const linkStyle = {
+const eventDate = {
   fontSize: '14px',
-  color: '#065f46',
-  textDecoration: 'underline',
+  color: '#047857',
+  marginBottom: '4px',
 };
 
-const footerText = {
-  fontSize: '12px',
-  color: '#6b7280',
-  marginTop: '24px',
+const eventPrice = {
+  fontSize: '14px',
+  color: '#047857',
+};
+
+const btnContainer = {
+  textAlign: 'center' as const,
+  margin: '32px 0',
+};
+
+const button = {
+  backgroundColor: '#10b981',
+  color: '#ffffff',
+  padding: '14px 24px',
+  borderRadius: '8px',
+  textDecoration: 'none',
+  fontWeight: '600',
+  fontSize: '16px',
+};
+
+const paragraph = {
+  fontSize: '16px',
+  lineHeight: '26px',
 };

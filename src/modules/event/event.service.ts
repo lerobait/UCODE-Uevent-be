@@ -4,8 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
-import dayjs from 'dayjs';
 
 import { Success } from '@/core/auth/dto/success.dto';
 import { UrlResponse } from '@/core/auth/dto/url.dto';
@@ -34,6 +34,7 @@ export class EventService {
     private readonly fileUploadService: FileUploadService,
     private readonly stripeService: StripeService,
     private readonly notificationService: NotificationService,
+    private readonly cs: ConfigService,
   ) {}
 
   private readonly include: Prisma.EventInclude = {
@@ -485,6 +486,7 @@ export class EventService {
       where: { id },
       include: { company: true },
     });
+    console.log('🚀 ~ EventService ~ purchase ~ event:', event);
 
     if (!event) {
       throw new NotFoundException('Event not found');
@@ -498,11 +500,11 @@ export class EventService {
       throw new BadRequestException('Event is not available for purchase');
     }
 
-    const isBeforeEvent = dayjs(event.publishDate).isBefore(dayjs());
+    // const isBeforeEvent = dayjs(event.publishDate).isBefore(dayjs());
 
-    if (isBeforeEvent) {
-      throw new BadRequestException('Event is not available for purchase');
-    }
+    // if (isBeforeEvent) {
+    //   throw new BadRequestException('Event is not available for purchase');
+    // }
 
     const { url } = await this.stripeService.createPaymentLink(
       {
@@ -517,6 +519,12 @@ export class EventService {
           eventId: id,
         },
         allow_promotion_codes: true,
+        after_completion: {
+          type: 'redirect',
+          redirect: {
+            url: `${this.cs.get('app').clientUrl}/events/${id}`,
+          },
+        },
       },
       event.company.stripeAccountId,
     );

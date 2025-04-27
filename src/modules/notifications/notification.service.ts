@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import dayjs from 'dayjs';
 import CompanyEvent from 'src/emails/company-event';
 import CompanyNews from 'src/emails/company-news';
 
@@ -7,7 +9,7 @@ import { MailService } from '@/core/mail/mail.service';
 import CommentReply from '@/emails/comment-reply';
 import CompanyEventDelete from '@/emails/company-event-delete';
 import CompanyEventNewAtendee from '@/emails/company-event-new-atendee';
-import ComapnyEventPurchase from '@/emails/company-event-purchase';
+import CompanyEventPurchase from '@/emails/company-event-purchase';
 import CompanyEventUpdate from '@/emails/company-event-update';
 
 import { GetNotificationDto } from './dto/get-notification.dto';
@@ -19,6 +21,7 @@ export class NotificationService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly mailService: MailService,
+    private readonly cs: ConfigService,
   ) {}
 
   async findAllByUserId(
@@ -459,11 +462,10 @@ export class NotificationService {
 
     const event = await this.databaseService.event.findUnique({
       where: { id: eventId },
-      select: { title: true },
     });
 
     if (!user || !user.settings || !event) {
-      throw new Error('User or Event not found');
+      return;
     }
 
     const shouldCreateNotification = ['IN_APP', 'BOTH'].includes(
@@ -488,10 +490,13 @@ export class NotificationService {
       ? this.mailService.sendMail({
           to: user.email,
           subject: `Ticket Purchased: ${event.title}`,
-          template: await ComapnyEventPurchase({
+          template: await CompanyEventPurchase({
             name: user.name,
             eventTitle: event.title,
-            link: `https://yourapp.com/events/${eventId}`,
+            link: `${this.cs.get('app').clientUrl}/users/${userId}/tickets`,
+            eventEndDate: dayjs(event.endDate).format('MM/DD/YYYY'),
+            eventStartDate: dayjs(event.startDate).format('MM/DD/YYYY'),
+            price: event.price,
           }),
         })
       : null;
@@ -514,7 +519,7 @@ export class NotificationService {
     });
 
     if (!event || !event.creator || !attendee) {
-      throw new Error('Event, Creator, or Attendee not found');
+      return;
     }
 
     if (!event.notifyOnNewAttendee) {

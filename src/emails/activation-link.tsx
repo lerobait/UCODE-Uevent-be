@@ -35,7 +35,7 @@ const ActivationLink: React.FC<EmailProps> = ({ link, name }) => (
         <Text style={paragraph}>
           Best,
           <br />
-          The Usof team
+          The Uevent team
         </Text>
       </Container>
     </Body>

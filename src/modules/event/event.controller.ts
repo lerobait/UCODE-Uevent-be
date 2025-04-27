@@ -186,7 +186,7 @@ export class EventController {
     return this.eventService.getAttendees(id, dto);
   }
 
-  @ApiBearerAuth()
+  @Public()
   @Get(':id/attendees/count')
   async getAttendeesCount(@Param() { id }: IDDto) {
     return this.eventService.getAttendeesCount(id);

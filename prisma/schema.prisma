@@ -217,7 +217,6 @@ model Event {
     publishDate         DateTime            @default(now()) @map("publish_date")
     showAttendeeList    Boolean             @default(true) @map("show_attendee_list")
     notifyOnNewAttendee Boolean             @default(false) @map("notify_on_new_attendee")
-    redirectUrl         String?             @map("redirect_url") // URL to redirect after ticket purchase
     format              EventFormatType     @default(OTHER) @map("format")
     stripeProductId     String?             @map("stripe_product_id")
     stripePriceId       String?             @map("stripe_price_id")
@@ -267,7 +266,6 @@ model EventAttendee {
     user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     ticket Ticket?
 
-    @@unique([eventId, userId])
     @@index([eventId])
     @@index([userId])
     @@map("event_attendees")

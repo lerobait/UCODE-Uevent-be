@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 
 import { DatabaseModule } from '@/core/db/db.module';
 import { FileUploadModule } from '@/core/file-upload/file-upload.module';
@@ -11,6 +12,12 @@ import { EventService } from './event.service';
 @Module({
   controllers: [EventController],
   providers: [EventService],
-  imports: [DatabaseModule, FileUploadModule, StripeModule, NotificationModule],
+  imports: [
+    DatabaseModule,
+    FileUploadModule,
+    StripeModule,
+    NotificationModule,
+    ConfigModule,
+  ],
 })
 export class EventModule {}

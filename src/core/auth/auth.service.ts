@@ -87,6 +87,9 @@ export class AuthService {
         bio: dto.bio,
         role: UserRole.USER,
         authProvider: AuthProviderType.EMAIL,
+        settings: {
+          create: {},
+        },
       },
     });
 
