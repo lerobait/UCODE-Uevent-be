@@ -160,9 +160,11 @@ export class CommentService {
 
   async findAll(dto: GetCommentDto) {
     const where: Prisma.CommentWhereInput = {};
+
     if (dto.eventId) where.eventId = dto.eventId;
     if (dto.newsId) where.companyNewsId = dto.newsId;
     if (dto.parentId) where.parentId = dto.parentId;
+    if (dto.userId) where.userId = dto.userId;
 
     const sortBy = dto.sortBy || 'date';
     const sortOrder = dto.sortOrder || 'desc';
