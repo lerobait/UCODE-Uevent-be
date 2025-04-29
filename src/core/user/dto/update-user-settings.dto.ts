@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NotificationChannelType, UserSettings } from '@prisma/client';
-import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserSettingsDto implements Partial<UserSettings> {
   @ApiProperty({ required: false })
@@ -35,6 +35,6 @@ export class UpdateUserSettingsDto implements Partial<UserSettings> {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsBoolean()
+  @IsString()
   themeMainColor?: string;
 }

@@ -217,9 +217,14 @@ export class AuthService {
     const userFormDb = await this.databaseService.user.findUnique({
       where: {
         email: socialData.email,
-        authProvider: provider,
       },
     });
+
+    if (userFormDb.authProvider !== provider) {
+      throw new BadRequestException(
+        'Invalid provider. Please use different authorization method',
+      );
+    }
 
     const user = userFormDb
       ? userFormDb
@@ -233,10 +238,6 @@ export class AuthService {
             role: UserRole.USER,
           },
         });
-
-    if (user.authProvider !== provider) {
-      throw new BadRequestException('Invalid provider');
-    }
 
     return this.generateTokenPair({
       sub: user.id,
