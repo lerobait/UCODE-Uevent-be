@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import type { Company, PrismaClient, User } from '@prisma/client';
+
 import { SEED_CONFIG } from '../config';
 import { imageGenerators } from '../generators';
 import type { CompanyCreateData } from '../types';

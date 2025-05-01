@@ -1,15 +1,16 @@
 import { faker } from '@faker-js/faker';
 import {
+  NotificationChannelType,
   type PrismaClient,
   type User,
-  NotificationChannelType,
 } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
 import { SEED_CONFIG } from '../config';
 import { imageGenerators } from '../generators';
 import type { UserCreateData } from '../types';
 import { getRandomEnum } from '../utils/helpers';
 import { logger } from '../utils/logger';
-import bcrypt = require('bcryptjs');
 
 // Seed users - all verified as requested
 export async function seedUsers(prisma: PrismaClient): Promise<User[]> {

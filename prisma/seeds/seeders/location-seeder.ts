@@ -1,4 +1,5 @@
 import type { Location, PrismaClient } from '@prisma/client';
+
 import { MAJOR_CITIES } from '../data/locations';
 import { generateRealisticLocation } from '../generators';
 import type { LocationCreateData } from '../types';

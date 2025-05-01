@@ -2,10 +2,11 @@ import { faker } from '@faker-js/faker';
 import {
   type Company,
   type Event,
-  type PrismaClient,
   EventFormatType,
   EventThemeType,
+  type PrismaClient,
 } from '@prisma/client';
+
 import { SEED_CONFIG } from '../config';
 import { imageGenerators } from '../generators';
 import type { EventCreateData } from '../types';
@@ -32,7 +33,7 @@ export async function seedEvents(
   let totalEventsToCreate = 0;
 
   // Calculate approximately how many events we'll create
-  companies.forEach((company) => {
+  companies.forEach(() => {
     if (Math.random() >= 0.1) {
       // 90% of companies will have events
       totalEventsToCreate += getRandomInt(

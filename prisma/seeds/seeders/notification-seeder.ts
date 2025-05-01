@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
-import type { PrismaClient, User, Event, Company } from '@prisma/client';
-import type { NotificationCreateData } from '../types';
+import type { Company, Event, PrismaClient, User } from '@prisma/client';
+
 import { SEED_CONFIG } from '../config';
-import { getRandomItem, getRandomInt, getRandomDate } from '../utils/helpers';
+import type { NotificationCreateData } from '../types';
+import { getRandomDate, getRandomInt, getRandomItem } from '../utils/helpers';
 
 // Seed notifications using createMany
 export async function seedNotifications(

@@ -1,11 +1,12 @@
 import {
-  type PrismaClient,
-  type User,
   type Comment,
+  type PrismaClient,
   ReactionType,
+  type User,
 } from '@prisma/client';
-import type { ReactionCreateData } from '../types';
+
 import { SEED_CONFIG } from '../config';
+import type { ReactionCreateData } from '../types';
 import { getRandomEnum, getRandomInt, getRandomItems } from '../utils/helpers';
 
 // Seed reactions using createMany

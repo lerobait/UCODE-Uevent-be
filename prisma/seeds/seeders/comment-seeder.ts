@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
-import type { PrismaClient, User, Event, Comment } from '@prisma/client';
-import type { CommentCreateData } from '../types';
+import type { Comment, Event, PrismaClient, User } from '@prisma/client';
+
 import { SEED_CONFIG } from '../config';
-import { getRandomItem, getRandomInt, getRandomDate } from '../utils/helpers';
+import type { CommentCreateData } from '../types';
+import { getRandomDate, getRandomInt, getRandomItem } from '../utils/helpers';
 
 // Seed comments using createMany
 export async function seedComments(

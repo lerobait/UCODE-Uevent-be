@@ -1,4 +1,4 @@
-import chalk = require('chalk');
+import chalk from 'chalk';
 
 // Define log types with their emojis and colors
 type LogLevel = 'info' | 'success' | 'warning' | 'error' | 'start' | 'complete';
@@ -150,6 +150,9 @@ export const logger = {
 
 // Helper functions
 function createProgressBar(percentage: number): string {
+  if (percentage < 0 || percentage > 100) {
+    return '';
+  }
   const width = 20;
   const completed = Math.floor((width * percentage) / 100);
   const remaining = width - completed;

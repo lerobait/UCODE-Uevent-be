@@ -1,22 +1,23 @@
 import { faker } from '@faker-js/faker';
 import type {
-  PrismaClient,
+  Comment,
   Company,
   CompanyNews,
+  PrismaClient,
   User,
-  Comment,
 } from '@prisma/client';
-import type { CommentCreateData, ReactionCreateData } from '../types';
+import { ReactionType } from '@prisma/client';
+
 import { SEED_CONFIG } from '../config';
 import { imageGenerators } from '../generators';
+import type { CommentCreateData, ReactionCreateData } from '../types';
 import {
-  getRandomItem,
-  getRandomInt,
   getRandomDate,
   getRandomEnum,
+  getRandomInt,
+  getRandomItem,
   getRandomItems,
 } from '../utils/helpers';
-import { ReactionType } from '@prisma/client';
 
 // Seed company news using createMany
 export async function seedCompanyNews(

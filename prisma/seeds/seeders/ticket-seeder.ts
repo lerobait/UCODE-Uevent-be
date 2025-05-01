@@ -1,11 +1,12 @@
 import { faker } from '@faker-js/faker';
 import {
-  type PrismaClient,
-  type User,
   type Event,
-  TicketStatusType,
   PaymentStatusType,
+  type PrismaClient,
+  TicketStatusType,
+  type User,
 } from '@prisma/client';
+
 import { getRandomInt, getRandomItems } from '../utils/helpers';
 
 // Seed tickets and attendees

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+
 import { seedComments } from './seeders/comment-seeder';
 import { seedCompanies } from './seeders/company-seeder';
 import { seedEvents } from './seeders/event-seeder';

@@ -5,6 +5,11 @@ import type { CityLocation } from '../types';
 export const MAJOR_CITIES: CityLocation[] = [
   // UK Locations (1/6 of total)
   { name: 'London', country: 'UK', lat: 51.5074, lng: -0.1278 },
+  { name: 'London', country: 'UK', lat: 51.5074, lng: -0.1278 },
+  { name: 'London', country: 'UK', lat: 51.5074, lng: -0.1278 },
+  { name: 'London', country: 'UK', lat: 51.5074, lng: -0.1278 },
+  { name: 'London', country: 'UK', lat: 51.5074, lng: -0.1278 },
+  { name: 'London', country: 'UK', lat: 51.5074, lng: -0.1278 },
   { name: 'Manchester', country: 'UK', lat: 53.4808, lng: -2.2426 },
   { name: 'Birmingham', country: 'UK', lat: 52.4862, lng: -1.8904 },
   { name: 'Glasgow', country: 'UK', lat: 55.8642, lng: -4.2518 },
@@ -52,6 +57,11 @@ export const MAJOR_CITIES: CityLocation[] = [
 
   // Ukraine Locations (1/6 of total)
   { name: 'Kyiv', country: 'Ukraine', lat: 50.4501, lng: 30.5234 },
+  { name: 'Kharkiv', country: 'Ukraine', lat: 49.9935, lng: 36.2304 },
+  { name: 'Kharkiv', country: 'Ukraine', lat: 49.9935, lng: 36.2304 },
+  { name: 'Kharkiv', country: 'Ukraine', lat: 49.9935, lng: 36.2304 },
+  { name: 'Kharkiv', country: 'Ukraine', lat: 49.9935, lng: 36.2304 },
+  { name: 'Kharkiv', country: 'Ukraine', lat: 49.9935, lng: 36.2304 },
   { name: 'Kharkiv', country: 'Ukraine', lat: 49.9935, lng: 36.2304 },
   { name: 'Odesa', country: 'Ukraine', lat: 46.4825, lng: 30.7233 },
   { name: 'Dnipro', country: 'Ukraine', lat: 48.4647, lng: 35.0462 },

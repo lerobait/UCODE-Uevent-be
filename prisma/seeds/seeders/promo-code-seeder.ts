@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import type { PrismaClient, Company } from '@prisma/client';
+import type { Company, PrismaClient } from '@prisma/client';
+
 import { SEED_CONFIG } from '../config';
 import { getRandomInt } from '../utils/helpers';
 
