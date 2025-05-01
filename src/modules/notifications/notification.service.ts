@@ -141,7 +141,7 @@ export class NotificationService {
           },
         },
       });
-    const link = this.createLink(`/companies/${companyId}/news/${newsId}`);
+    const link = this.createLink(`/companies/news/${newsId}`);
     const notifications = subscriptions
       .filter((sub) =>
         ['IN_APP', 'BOTH'].includes(sub.user.settings?.companyUpdateChannel),

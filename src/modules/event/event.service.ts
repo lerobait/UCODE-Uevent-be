@@ -159,9 +159,13 @@ export class EventService {
     });
 
     if (!event) {
-      throw new Error('Event not found');
+      throw new NotFoundException('Event not found');
     }
-
+    if (event.creatorId !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to update this event',
+      );
+    }
     const shouldRemoveLocation =
       dto.location === null && event.location !== null;
     const eventLocationAction = shouldRemoveLocation
@@ -192,7 +196,6 @@ export class EventService {
     const updatedEvent = await this.databaseService.event.update({
       where: {
         id,
-        creatorId: userId,
       },
       data: {
         ...rest,
@@ -246,7 +249,7 @@ export class EventService {
   }
   async findAll(dto: GetEventDto, userId?: string): Promise<PaginatedEvent> {
     this.validateLocationParams(dto);
-    const isLocationSearch = dto.lat !== undefined && dto.lng !== undefined;
+    const isLocationSearch = (dto.lat && dto.lng) || !dto.page;
     const isPagination = !isLocationSearch;
 
     const where = this.buildWhereClause(dto, userId);
@@ -313,8 +316,11 @@ export class EventService {
     if (dto.search) where.title = { contains: dto.search, mode: 'insensitive' };
     if (dto.companyId) where.companyId = dto.companyId;
     if (userId) where.creatorId = userId;
-
     if (dto.lat !== undefined && dto.lng !== undefined) {
+      if (dto.lat === null && dto.lng === null) {
+        where.location = null;
+        return where;
+      }
       const latDeg = dto.radius / KILOMETERS_IN_DEGREE;
       const lngDeg =
         dto.radius / (KILOMETERS_IN_DEGREE * Math.cos(this.toRad(dto.lat)));

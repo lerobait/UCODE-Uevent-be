@@ -111,7 +111,11 @@ export class CompanyNewsService {
         company: true,
       },
     });
-    const count = await this.databaseService.companyNews.count();
+    const count = await this.databaseService.companyNews.count({
+      where: {
+        companyId,
+      },
+    });
 
     return new PaginatedCompanyNewsEntity(data, count, dto);
   }

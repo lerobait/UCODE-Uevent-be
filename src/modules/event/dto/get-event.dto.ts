@@ -89,8 +89,8 @@ export class GetEventDto {
   })
   @IsOptional()
   @IsNumber()
-  @Transform(({ value }) => Number(value))
-  lat?: number;
+  @Transform(({ value }) => (value === 'null' ? null : Number(value)))
+  lat?: number | null;
 
   @ApiProperty({
     required: false,
@@ -98,8 +98,8 @@ export class GetEventDto {
   })
   @IsOptional()
   @IsNumber()
-  @Transform(({ value }) => Number(value))
-  lng?: number;
+  @Transform(({ value }) => (value === 'null' ? null : Number(value)))
+  lng?: number | null;
 
   @ApiProperty({
     required: false,

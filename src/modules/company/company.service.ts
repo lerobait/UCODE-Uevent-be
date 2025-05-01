@@ -161,7 +161,10 @@ export class CompanyService {
   }
 
   private buildWhere(dto: GetCompanyDto): Prisma.CompanyWhereInput {
-    const where: Prisma.CompanyWhereInput = { isVerified: dto.isVerified };
+    const where: Prisma.CompanyWhereInput = {
+      isVerified: dto.isVerified,
+      ownerId: dto.ownerId,
+    };
 
     if (dto.search) {
       where.OR = [

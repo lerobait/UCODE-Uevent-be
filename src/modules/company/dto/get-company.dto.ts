@@ -33,4 +33,9 @@ export class GetCompanyDto extends IntersectionType(PaginationOptionsDto) {
   @IsOptional()
   @Type(() => Boolean)
   isVerified?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  ownerId?: string;
 }

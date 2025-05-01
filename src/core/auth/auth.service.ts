@@ -112,7 +112,6 @@ export class AuthService {
   async refresh(userId: string, token: string) {
     try {
       const { key } = await this.findRefreshToken(userId, token);
-
       await this.redis.del(key);
 
       const { email } = await this.databaseService.user.findUnique({
@@ -131,8 +130,8 @@ export class AuthService {
         sub: userId,
         email,
       });
-    } catch {
-      throw new ForbiddenException();
+    } catch (e) {
+      throw new ForbiddenException(e);
     }
   }
 
@@ -220,7 +219,7 @@ export class AuthService {
       },
     });
 
-    if (userFormDb.authProvider !== provider) {
+    if (userFormDb && userFormDb.authProvider !== provider) {
       throw new BadRequestException(
         'Invalid provider. Please use different authorization method',
       );
@@ -286,7 +285,6 @@ export class AuthService {
         secret: this.configService.get('jwt').refreshToken.secret,
       }),
     ]);
-
     await this.redis.set(
       `${payload.sub}:${refreshToken}`,
       JSON.stringify(payload),
