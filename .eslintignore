@@ -18,6 +18,5 @@ dist
 # typescript
 
 vite-env.d.ts
-/data
 node_modules
 dist
