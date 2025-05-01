@@ -1,18 +1,23 @@
 # system
+
 .DS_Store
 
 # dependencies
+
 node_modules
 
 # production
+
 dist
-*.html
+\*.html
 
 # local env
-.env*.local
+
+.env\*.local
 
 # typescript
+
 vite-env.d.ts
-data
+/data
 node_modules
 dist
