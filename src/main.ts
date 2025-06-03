@@ -10,7 +10,10 @@ import { ApiConfigService } from './config/api-config.service';
 import { GlobalLogger } from './core/global/global.logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+    bodyParser: true,
+  });
   const logger = app.get(GlobalLogger);
   const cs = app.get(ApiConfigService);
   const port = cs.getPort();

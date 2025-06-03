@@ -8,6 +8,7 @@ import getAwsConfig from './configs/aws.config';
 import getJwtConfig from './configs/jwt.config';
 import getMailConfig from './configs/mail.config';
 import getRedisConfig from './configs/redis.config';
+import getStripeConfig from './configs/stripe.config';
 
 @Global()
 @Module({
@@ -20,6 +21,7 @@ import getRedisConfig from './configs/redis.config';
         getAwsConfig,
         getRedisConfig,
         getAuthConfig,
+        getStripeConfig,
       ],
     }),
   ],

@@ -13,7 +13,7 @@ import ResetPasswordLink from 'src/emails/reset-password';
 import { ApiConfigService } from '../../config/api-config.service';
 import { DatabaseService } from '../db/database.service';
 import { MailService } from '../mail/mail.service';
-import { User } from '../user/user.entity';
+import { UserEntity } from '../user/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -84,16 +84,18 @@ export class AuthService {
         password: hash,
         name: dto.name,
         emailVerified: false,
-        phone: dto.phone,
         bio: dto.bio,
         role: UserRole.USER,
         authProvider: AuthProviderType.EMAIL,
+        settings: {
+          create: {},
+        },
       },
     });
 
     await this.sendActivationLink(user.email, user.id, user.name);
 
-    return new User(user);
+    return new UserEntity(user);
   }
 
   private async sendActivationLink(email: string, id: string, name: string) {
@@ -110,7 +112,6 @@ export class AuthService {
   async refresh(userId: string, token: string) {
     try {
       const { key } = await this.findRefreshToken(userId, token);
-
       await this.redis.del(key);
 
       const { email } = await this.databaseService.user.findUnique({
@@ -129,8 +130,8 @@ export class AuthService {
         sub: userId,
         email,
       });
-    } catch {
-      throw new ForbiddenException();
+    } catch (e) {
+      throw new ForbiddenException(e);
     }
   }
 
@@ -215,9 +216,14 @@ export class AuthService {
     const userFormDb = await this.databaseService.user.findUnique({
       where: {
         email: socialData.email,
-        authProvider: provider,
       },
     });
+
+    if (userFormDb && userFormDb.authProvider !== provider) {
+      throw new BadRequestException(
+        'Invalid provider. Please use different authorization method',
+      );
+    }
 
     const user = userFormDb
       ? userFormDb
@@ -231,10 +237,6 @@ export class AuthService {
             role: UserRole.USER,
           },
         });
-
-    if (user.authProvider !== provider) {
-      throw new BadRequestException('Invalid provider');
-    }
 
     return this.generateTokenPair({
       sub: user.id,
@@ -283,7 +285,6 @@ export class AuthService {
         secret: this.configService.get('jwt').refreshToken.secret,
       }),
     ]);
-
     await this.redis.set(
       `${payload.sub}:${refreshToken}`,
       JSON.stringify(payload),

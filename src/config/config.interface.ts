@@ -4,6 +4,7 @@ import { IAwsConfig } from './configs/aws.config';
 import { IJwtConfig } from './configs/jwt.config';
 import { IMailConfig } from './configs/mail.config';
 import { IRedisConfig } from './configs/redis.config';
+import { IStripeConfig } from './configs/stripe.config';
 
 export enum Env {
   DEVELOPMENT = 'development',
@@ -16,7 +17,8 @@ export type IConfig = IAppConfig &
   IAwsConfig &
   IJwtConfig &
   IRedisConfig &
-  IAuthConfig;
+  IAuthConfig &
+  IStripeConfig;
 
 type Primitive = string | number | boolean | null | undefined;
 

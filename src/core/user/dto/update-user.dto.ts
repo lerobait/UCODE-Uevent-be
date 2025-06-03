@@ -1,13 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NotificationChannelType } from '@prisma/client';
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateUserDto {
   @ApiProperty({ required: false, example: 'John Doe' })
@@ -17,40 +9,9 @@ export class UpdateUserDto {
   @MaxLength(120)
   name?: string;
 
-  @ApiProperty({ required: false, example: '+1234567890' })
-  @IsOptional()
-  @IsPhoneNumber()
-  phone?: string;
-
   @ApiProperty({ required: false, example: 'This is my bio' })
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(1000)
   bio?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsBoolean()
-  showInAttendeeList?: boolean;
-
-  @ApiProperty({ required: false, enum: NotificationChannelType })
-  @IsOptional()
-  @IsBoolean()
-  newCommentChannel?: NotificationChannelType;
-
-  @ApiProperty({ required: false, enum: NotificationChannelType })
-  @IsOptional()
-  @IsBoolean()
-  eventReminderChannel?: NotificationChannelType;
-
-  @ApiProperty({ required: false, enum: NotificationChannelType })
-  @IsOptional()
-  @IsBoolean()
-  companyUpdateChannel?: NotificationChannelType;
-
-  @ApiProperty({ required: false, enum: NotificationChannelType })
-  @IsOptional()
-  @IsBoolean()
-  ticketPurchaseChannel?: NotificationChannelType;
 }

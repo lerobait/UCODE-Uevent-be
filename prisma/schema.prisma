@@ -9,7 +9,7 @@ generator client {
 
 generator dbml {
     provider = "prisma-dbml-generator"
-    output   = "./generated/client"
+    output   = "./generated/dbml/schema.dbml"
 }
 
 // ======== ENUMS ========
@@ -35,7 +35,18 @@ enum EventFormatType {
     CONFERENCE
     LECTURE
     WORKSHOP
+    SEMINAR
+    MEETUP
+    PANEL_DISCUSSION
+    WEBINAR
+    NETWORKING
+    PERFORMANCE
+    EXHIBITION
+    COMPETITION
     FESTIVAL
+    PARTY
+    CEREMONY
+    TRAINING
     OTHER
 }
 
@@ -46,41 +57,76 @@ enum PaymentStatusType {
     REFUNDED
 }
 
-enum DiscountType {
-    PERCENTAGE
-    FIXED
-}
-
 enum TicketStatusType {
     VALID
     USED
     CANCELLED
 }
 
+enum EventThemeType {
+    ART
+    MUSIC
+    TECHNOLOGY
+    BUSINESS
+    EDUCATION
+    HEALTH
+    SPORTS
+    FOOD
+    TRAVEL
+    FASHION
+    CULTURE
+    SCIENCE
+    ENVIRONMENT
+    ENTERTAINMENT
+    POLITICS
+    SOCIAL
+    OTHER
+}
+
+enum ReactionType {
+    LIKE
+    DISLIKE
+    LOVE
+    LAUGH
+    SAD
+    ANGRY
+}
+
 // ======== MODELS ========
-
-model User {
-    id                 String           @id @default(cuid()) @map("id")
-    email              String           @unique @map("email")
-    password           String?          @map("password") // Null if using OAuth
-    name               String           @map("name")
-    avatar             String?          @map("avatar")
-    bio                String?          @map("bio")
-    phone              String?          @map("phone")
-    authProvider       AuthProviderType @default(EMAIL) @map("auth_provider")
-    role               UserRole         @default(USER) @map("role")
-    emailVerified      Boolean          @default(false) @map("email_verified")
-    showInAttendeeList Boolean          @default(true) @map("show_in_attendee_list")
-    createdAt          DateTime         @default(now()) @map("created_at")
-    updatedAt          DateTime         @updatedAt @map("updated_at")
-
+model UserSettings {
+    id                    String                  @id @default(cuid()) @map("id")
+    createdAt             DateTime                @default(now()) @map("created_at")
+    updatedAt             DateTime                @updatedAt @map("updated_at")
+    // privacy settings
+    showInAttendeeList    Boolean                 @default(true) @map("show_in_attendee_list")
+    showFollowingList     Boolean                 @default(true) @map("show_following_list")
     // Notification preferences
     eventReminderChannel  NotificationChannelType @default(BOTH) @map("event_reminder_channel")
     ticketPurchaseChannel NotificationChannelType @default(BOTH) @map("ticket_purchase_channel")
     newCommentChannel     NotificationChannelType @default(IN_APP) @map("new_comment_channel")
     companyUpdateChannel  NotificationChannelType @default(IN_APP) @map("company_update_channel")
+    themeMainColor        String?                 @map("theme_main_color") // Hex color code
+    user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId                String                  @unique @map("user_id")
 
+    @@map("user_settings")
+}
+
+model User {
+    id                  String                @id @default(cuid()) @map("id")
+    email               String                @unique @map("email")
+    password            String?               @map("password") // Null if using OAuth
+    name                String                @map("name")
+    avatar              String?               @map("avatar")
+    bio                 String?               @map("bio")
+    authProvider        AuthProviderType      @default(EMAIL) @map("auth_provider")
+    role                UserRole              @default(USER) @map("role")
+    emailVerified       Boolean               @default(false) @map("email_verified")
+    createdAt           DateTime              @default(now()) @map("created_at")
+    updatedAt           DateTime              @updatedAt @map("updated_at")
+    settingsId          String?               @map("settings_id")
     // Relations
+    settings            UserSettings?
     companies           Company[]
     tickets             Ticket[]
     comments            Comment[]
@@ -91,28 +137,35 @@ model User {
     subscribedEvents    EventSubscription[]
     subscribedCompanies CompanySubscription[]
     payments            Payment[]
+    reactions           Reaction[]
 
     @@index([email])
+    @@index([name])
     @@map("users")
 }
 
 model Company {
-    id          String   @id @default(cuid()) @map("id")
-    name        String   @map("name")
-    email       String   @map("email")
-    description String?  @map("description")
-    logo        String?  @map("logo")
-    website     String?  @map("website")
-    location    String   @map("location")
-    createdAt   DateTime @default(now()) @map("created_at")
-    updatedAt   DateTime @updatedAt @map("updated_at")
+    id              String   @id @default(cuid()) @map("id")
+    name            String   @map("name")
+    email           String   @map("email")
+    description     String?  @map("description")
+    logo            String?  @map("logo")
+    website         String?  @map("website")
+    coverImage      String?  @map("cover_image")
+    locationId      String   @unique @map("location_id")
+    stripeAccountId String?  @map("stripe_account_id")
+    isVerified      Boolean  @default(false) @map("is_verified")
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @updatedAt @map("updated_at")
+    ownerId         String   @map("owner_id")
 
     // Relations
+    location    Location              @relation(fields: [locationId], references: [id], onDelete: Cascade)
     owner       User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-    ownerId     String                @map("owner_id")
     events      Event[]
     news        CompanyNews[]
     subscribers CompanySubscription[]
+    promocodes  PromoCode[]
 
     @@index([ownerId])
     @@map("companies")
@@ -125,10 +178,12 @@ model CompanyNews {
     imageUrl  String?  @map("image_url")
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
+    companyId String   @map("company_id")
 
     // Relations
-    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-    companyId String  @map("company_id")
+    company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    comments  Comment[]
+    reactions Reaction[]
 
     @@index([companyId])
     @@map("company_news")
@@ -137,12 +192,12 @@ model CompanyNews {
 model CompanySubscription {
     id        String   @id @default(cuid()) @map("id")
     createdAt DateTime @default(now()) @map("created_at")
+    companyId String   @map("company_id")
+    userId    String   @map("user_id")
 
     // Relations
-    user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId    String  @map("user_id")
-    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-    companyId String  @map("company_id")
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
     @@unique([userId, companyId])
     @@index([userId])
@@ -151,37 +206,34 @@ model CompanySubscription {
 }
 
 model Event {
-    id                  String          @id @default(cuid()) @map("id")
-    title               String          @map("title")
-    description         String          @map("description")
-    posterUrl           String?         @map("poster_url")
-    location            String          @map("location")
-    locationLat         Float?          @map("location_lat") // Latitude for Google Maps
-    locationLng         Float?          @map("location_lng") // Longitude for Google Maps
-    startDate           DateTime        @map("start_date")
-    endDate             DateTime        @map("end_date")
-    price               Float           @default(0) @map("price")
-    currency            String          @default("USD") @map("currency")
-    maxAttendees        Int?            @map("max_attendees") // Null means unlimited
-    publishDate         DateTime        @default(now()) @map("publish_date")
-    showAttendeeList    Boolean         @default(true) @map("show_attendee_list")
-    notifyOnNewAttendee Boolean         @default(false) @map("notify_on_new_attendee")
-    redirectUrl         String?         @map("redirect_url") // URL to redirect after ticket purchase
-    format              EventFormatType @default(OTHER) @map("format")
-    createdAt           DateTime        @default(now()) @map("created_at")
-    updatedAt           DateTime        @updatedAt @map("updated_at")
-
+    id                  String              @id @default(cuid()) @map("id")
+    title               String              @map("title")
+    description         String              @map("description")
+    posterUrl           String?             @map("poster_url")
+    startDate           DateTime            @map("start_date")
+    endDate             DateTime            @map("end_date")
+    price               Float               @default(0) @map("price")
+    maxAttendees        Int?                @map("max_attendees") // Null means unlimited
+    publishDate         DateTime            @default(now()) @map("publish_date")
+    showAttendeeList    Boolean             @default(true) @map("show_attendee_list")
+    notifyOnNewAttendee Boolean             @default(false) @map("notify_on_new_attendee")
+    format              EventFormatType     @default(OTHER) @map("format")
+    stripeProductId     String?             @map("stripe_product_id")
+    stripePriceId       String?             @map("stripe_price_id")
+    createdAt           DateTime            @default(now()) @map("created_at")
+    updatedAt           DateTime            @updatedAt @map("updated_at")
+    locationId          String?             @unique @map("location_id")
+    companyId           String              @map("company_id")
+    creatorId           String              @map("creator_id")
     // Relations
-    creator     User                @relation("EventCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-    creatorId   String              @map("creator_id")
-    company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-    companyId   String              @map("company_id")
-    attendees   EventAttendee[]
-    tickets     Ticket[]
-    comments    Comment[]
-    subscribers EventSubscription[]
-    promoCodes  PromoCode[]
-    themes      EventTheme[]
+    creator             User                @relation("EventCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+    company             Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    location            Location?           @relation(fields: [locationId], references: [id], onDelete: Cascade)
+    attendees           EventAttendee[]
+    tickets             Ticket[]
+    comments            Comment[]
+    subscribers         EventSubscription[]
+    themes              EventThemeType[]
 
     @@index([creatorId])
     @@index([companyId])
@@ -190,44 +242,30 @@ model Event {
     @@map("events")
 }
 
-model EventTheme {
-    id String @id @default(cuid()) @map("id")
+model Location {
+    id      String @id @default(cuid()) @map("id")
+    address String @map("address")
+    lat     Float  @map("lat") // Latitude for Google Maps
+    lng     Float  @map("lng") // Longitude for Google Maps
 
     // Relations
-    event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    eventId String @map("event_id")
-    theme   Theme  @relation(fields: [themeId], references: [id], onDelete: Cascade)
-    themeId String @map("theme_id")
+    event   Event?
+    company Company?
 
-    @@unique([eventId, themeId])
-    @@index([eventId])
-    @@index([themeId])
-    @@map("event_themes")
-}
-
-model Theme {
-    id          String  @id @default(cuid()) @map("id")
-    name        String  @unique @map("name")
-    description String? @map("description")
-
-    // Relations
-    events EventTheme[]
-
-    @@map("themes")
+    @@map("locations")
 }
 
 model EventAttendee {
     id        String   @id @default(cuid()) @map("id")
     createdAt DateTime @default(now()) @map("created_at")
+    userId    String   @map("user_id")
+    eventId   String   @map("event_id")
 
     // Relations
-    event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    eventId String  @map("event_id")
-    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId  String  @map("user_id")
-    ticket  Ticket?
+    event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    ticket Ticket?
 
-    @@unique([eventId, userId])
     @@index([eventId])
     @@index([userId])
     @@map("event_attendees")
@@ -236,12 +274,12 @@ model EventAttendee {
 model EventSubscription {
     id        String   @id @default(cuid()) @map("id")
     createdAt DateTime @default(now()) @map("created_at")
+    userId    String   @map("user_id")
+    eventId   String   @map("event_id")
 
     // Relations
-    event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    eventId String @map("event_id")
-    user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId  String @map("user_id")
+    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([eventId, userId])
     @@index([eventId])
@@ -251,71 +289,84 @@ model EventSubscription {
 
 model Ticket {
     id           String           @id @default(cuid()) @map("id")
-    ticketNumber String           @unique @map("ticket_number")
     purchaseDate DateTime         @default(now()) @map("purchase_date")
     status       TicketStatusType @default(VALID) @map("status")
+    attendeeId   String           @unique @map("attendee_id")
+    eventId      String           @map("event_id")
+    userId       String           @map("user_id")
 
     // Relations
-    event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    eventId     String        @map("event_id")
-    user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId      String        @map("user_id")
-    payment     Payment?
-    attendee    EventAttendee @relation(fields: [attendeeId], references: [id], onDelete: Cascade)
-    attendeeId  String        @unique @map("attendee_id")
-    promoCode   PromoCode?    @relation(fields: [promoCodeId], references: [id])
-    promoCodeId String?       @map("promo_code_id")
+    event    Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+    payment  Payment?
+    attendee EventAttendee @relation(fields: [attendeeId], references: [id], onDelete: Cascade)
 
     @@index([eventId])
     @@index([userId])
-    @@index([ticketNumber])
     @@index([purchaseDate])
     @@map("tickets")
 }
 
 model PromoCode {
-    id             String       @id @default(cuid()) @map("id")
-    code           String       @unique @map("code")
-    discountAmount Float        @map("discount_amount")
-    discountType   DiscountType @default(PERCENTAGE) @map("discount_type")
-    maxUses        Int?         @map("max_uses") // Null means unlimited
-    currentUses    Int          @default(0) @map("current_uses")
-    expiryDate     DateTime?    @map("expiry_date")
-    createdAt      DateTime     @default(now()) @map("created_at")
+    id             String @id @default(cuid()) @map("id")
+    companyId      String @map("company_id")
+    code           String @map("code")
+    maxUses        Int    @map("max_uses")
+    uses           Int    @default(0) @map("uses")
+    discount       Int    @map("discount")
+    stripeId       String @unique @map("stripe_id")
+    stripeCouponId String @unique @map("stripe_coupon_id")
 
     // Relations
-    event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    eventId String   @map("event_id")
-    tickets Ticket[]
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-    @@index([eventId])
-    @@index([code])
     @@map("promo_codes")
 }
 
 model Comment {
-    id        String   @id @default(cuid()) @map("id")
-    content   String   @map("content")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-
+    id            String       @id @default(cuid()) @map("id")
+    content       String       @map("content")
+    parentId      String?      @map("parent_id") // ID of the comment being replied to
+    createdAt     DateTime     @default(now()) @map("created_at")
+    updatedAt     DateTime     @updatedAt @map("updated_at")
+    eventId       String?      @map("event_id")
+    companyNewsId String?      @map("company_news_id")
+    userId        String       @map("user_id")
     // Relations
-    event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    eventId String @map("event_id")
-    user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId  String @map("user_id")
+    event         Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+    companyNews   CompanyNews? @relation(fields: [companyNewsId], references: [id], onDelete: Cascade)
+    replies       Comment[]    @relation("CommentReplies")
+    replyTo       Comment?     @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+    reactions     Reaction[]
 
     @@index([eventId])
     @@index([userId])
     @@map("comments")
 }
 
+model Reaction {
+    id        String       @id @default(cuid()) @map("id")
+    type      ReactionType @default(LIKE) @map("type")
+    createdAt DateTime     @default(now()) @map("created_at")
+    userId    String       @map("user_id")
+    commentId String?      @map("comment_id")
+    newsId    String?      @map("news_id")
+
+    // Relations
+    comment Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    news    CompanyNews? @relation(fields: [newsId], references: [id], onDelete: Cascade)
+    user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([commentId])
+    @@index([userId])
+    @@map("reactions")
+}
+
 model Payment {
     id            String            @id @default(cuid()) @map("id")
     amount        Float             @map("amount")
-    currency      String            @default("USD") @map("currency")
     status        PaymentStatusType @default(PENDING) @map("status")
-    paymentMethod String            @default("CARD") @map("payment_method")
     paymentIntent String?           @map("payment_intent") // Stripe payment intent ID
     createdAt     DateTime          @default(now()) @map("created_at")
     updatedAt     DateTime          @updatedAt @map("updated_at")
@@ -336,6 +387,7 @@ model Notification {
     type      String   @map("type") // EVENT_REMINDER, TICKET_PURCHASE, NEW_COMMENT, etc.
     title     String   @map("title")
     content   String   @map("content")
+    link      String?  @map("link") // URL to redirect when clicked
     isRead    Boolean  @default(false) @map("is_read")
     createdAt DateTime @default(now()) @map("created_at")
 

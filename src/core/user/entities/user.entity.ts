@@ -1,10 +1,5 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import {
-  AuthProviderType,
-  NotificationChannelType,
-  User as IUser,
-  UserRole,
-} from '@prisma/client';
+import { AuthProviderType, User, UserRole } from '@prisma/client';
 import {
   ClassTransformOptions,
   Exclude,
@@ -12,10 +7,10 @@ import {
   Type,
 } from 'class-transformer';
 
-import { BaseEntity } from '../../common/base/base.entity';
-import { Paginated } from '../../shared/pagination';
+import { BaseEntity } from '../../../common/base/base.entity';
+import { Paginated } from '../../../shared/pagination';
 
-export class UserDescription implements IUser {
+export class UserDescription implements User {
   @ApiProperty({ example: 'qwcqwdocq12djq2ewff232' })
   id: string;
   @ApiProperty({ example: 'John Doe' })
@@ -23,21 +18,15 @@ export class UserDescription implements IUser {
   @ApiProperty({ example: 'micha21cloz@gmail.com' })
   email: string;
   @Exclude()
-  @ApiProperty({ example: 'Pass123@' })
   password: string;
   @ApiProperty({ example: 'https://example.com/avatar.png' })
   avatar: string;
   @ApiProperty({ example: 'Well well well' })
   bio: string;
-  @ApiProperty({ example: '+3800000000000' })
-  phone: string;
   @ApiProperty({ enum: UserRole })
   role: UserRole;
   @ApiProperty({ example: true })
   emailVerified: boolean;
-  @ApiProperty({ example: false })
-  showInAttendeeList: boolean;
-  @Exclude()
   @ApiProperty({ example: '2025-04-02T16:27:17Z' })
   createdAt: Date;
   @Exclude()
@@ -45,14 +34,8 @@ export class UserDescription implements IUser {
   updatedAt: Date;
   @ApiProperty({ enum: AuthProviderType })
   authProvider: AuthProviderType;
-  @ApiProperty({ enum: NotificationChannelType })
-  eventReminderChannel: NotificationChannelType;
-  @ApiProperty({ enum: NotificationChannelType })
-  ticketPurchaseChannel: NotificationChannelType;
-  @ApiProperty({ enum: NotificationChannelType })
-  newCommentChannel: NotificationChannelType;
-  @ApiProperty({ enum: NotificationChannelType })
-  companyUpdateChannel: NotificationChannelType;
+  @Exclude()
+  settingsId: string;
 }
 
 export class UserRelations {
@@ -70,7 +53,7 @@ export class UserRelations {
   // eventAttendees: EventAttendee[];
 }
 
-export class User
+export class UserEntity
   extends IntersectionType(UserDescription, UserRelations)
   implements BaseEntity
 {
@@ -81,7 +64,7 @@ export class User
 }
 
 export class PaginatedUsers extends Paginated<User> {
-  @Type(() => User)
-  @ApiProperty({ type: () => User, isArray: true })
+  @Type(() => UserEntity)
+  @ApiProperty({ type: () => UserEntity, isArray: true })
   declare items: User[];
 }

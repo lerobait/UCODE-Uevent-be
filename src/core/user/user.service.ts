@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
+import { CompanySubscriptionEntity } from '../../modules/company/entities/company-subscrtiptions.entity';
+import { EventSubscriptionEntity } from '../../modules/event/entities/event-subscriptions.entity';
 import { DatabaseService } from '../db/database.service';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserSettingsDto } from './dto/update-user-settings.dto';
 
 @Injectable()
 export class UserService {
@@ -12,18 +15,8 @@ export class UserService {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
-  static USER_SELECT: Prisma.UserSelect = {
-    id: true,
-    email: true,
-    name: true,
-    avatar: true,
-    bio: true,
-    createdAt: true,
-    updatedAt: true,
-    role: true,
-    sentNotifications: true,
-    emailVerified: true,
-    phone: true,
+  private include: Prisma.UserInclude = {
+    settings: true,
   };
 
   async me(userId: string) {
@@ -31,7 +24,59 @@ export class UserService {
       where: {
         id: userId,
       },
-      select: UserService.USER_SELECT,
+      include: this.include,
+    });
+  }
+
+  async findMyEventsSubscriptions(
+    userId: string,
+  ): Promise<EventSubscriptionEntity[]> {
+    const subscriptions = await this.databaseService.eventSubscription.findMany(
+      {
+        where: {
+          userId,
+        },
+        include: {
+          event: {
+            include: {
+              location: true,
+              company: true,
+            },
+          },
+        },
+      },
+    );
+    return subscriptions.map((sub) => new EventSubscriptionEntity(sub));
+  }
+  async findMyCompaniesSubscriptions(
+    userId: string,
+  ): Promise<CompanySubscriptionEntity[]> {
+    const subscriptions =
+      await this.databaseService.companySubscription.findMany({
+        where: {
+          userId,
+        },
+        include: {
+          company: {
+            include: {
+              location: true,
+              _count: {
+                select: {
+                  events: true,
+                  subscribers: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    return subscriptions.map((sub) => new CompanySubscriptionEntity(sub));
+  }
+  async getById(userId: string) {
+    return this.databaseService.user.findUnique({
+      where: {
+        id: userId,
+      },
     });
   }
 
@@ -45,7 +90,7 @@ export class UserService {
       data: {
         avatar,
       },
-      select: UserService.USER_SELECT,
+      include: this.include,
     });
   }
 
@@ -57,7 +102,31 @@ export class UserService {
       data: {
         ...dto,
       },
-      select: UserService.USER_SELECT,
+      include: this.include,
+    });
+  }
+
+  async updateSettings(userId: string, dto: UpdateUserSettingsDto) {
+    return this.databaseService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        settings: {
+          upsert: {
+            create: {
+              ...dto,
+            },
+            update: {
+              ...dto,
+            },
+            where: {
+              userId,
+            },
+          },
+        },
+      },
+      include: this.include,
     });
   }
 }
