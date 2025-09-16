@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/logo.svg" width="100" />
+  <img src="./logo.svg" width="100" />
 </p>
 <p align="center">
     <h1 align="center">UEvent Backend</h1>
