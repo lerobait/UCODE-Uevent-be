@@ -2,7 +2,7 @@
   <img src="./logo.svg" width="100" />
 </p>
 <p align="center">
-    <h1 align="center">UEvent Backend</h1>
+    <h1 align="center">Uevent</h1>
 </p>
 <p align="center">
     <em>Event Sharing Platform API</em>
